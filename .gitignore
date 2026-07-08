@@ -1,0 +1,53 @@
+###############################################################################
+# ClubCMS
+###############################################################################
+
+# Betriebssystem
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.idea/
+.vscode/
+*.code-workspace
+
+# Composer
+/vendor/
+
+# Node (falls wir später Vite/npm einsetzen)
+node_modules/
+
+# Logs
+*.log
+
+# PHPUnit
+.phpunit.result.cache
+
+# Coverage
+coverage/
+
+# Build
+dist/
+build/
+
+# Archive
+*.zip
+
+# Temporary
+tmp/
+temp/
+
+# Environment
+.env
+.env.local
+
+# macOS
+.AppleDouble
+.LSOverride
+
+# Windows
+ehthumbs.db
+
+# Git
+*.orig
