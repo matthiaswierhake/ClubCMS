@@ -158,3 +158,4 @@ Erst danach beginnt die Implementierung des Plugins.
 ClubCMS wird wie ein professionelles Softwareprodukt entwickelt.
 
 Die Dokumentation ist die verbindliche Grundlage des gesamten Projekts.
+Test
