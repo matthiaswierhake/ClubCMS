@@ -100,7 +100,7 @@ final class LandingPageRenderer
             'kicker' => $category?->slug ? strtoupper($category->slug) : $fallback['kicker'],
             'status' => $category === null
                 ? $fallback['status']
-                : sprintf('Kategorie: %s', $category->sortMode),
+                : sprintf('Kategorie: %s', Category::sortModeLabel($category->sortMode)),
             'categoryId' => $category?->id ?? '',
             'items' => $this->buildItemsForCategory($category, $cards),
         ];
@@ -122,13 +122,26 @@ final class LandingPageRenderer
         ));
 
         usort($items, function (Card $left, Card $right) use ($category): int {
-            if ($category->sortMode === 'manual') {
-                return $left->position <=> $right->position
-                    ?: $this->comparePublishedAt($right, $left);
-            }
-
-            return $this->comparePublishedAt($right, $left)
-                ?: ($left->position <=> $right->position);
+            return match (Category::normalizeSortMode($category->sortMode)) {
+                'date_asc' => $this->comparePublishedAt($left, $right)
+                    ?: ($left->position <=> $right->position)
+                    ?: strnatcasecmp($left->title, $right->title),
+                'position_asc' => ($left->position <=> $right->position)
+                    ?: $this->comparePublishedAt($right, $left)
+                    ?: strnatcasecmp($left->title, $right->title),
+                'position_desc' => ($right->position <=> $left->position)
+                    ?: $this->comparePublishedAt($right, $left)
+                    ?: strnatcasecmp($left->title, $right->title),
+                'title_asc' => strnatcasecmp($left->title, $right->title)
+                    ?: $this->comparePublishedAt($right, $left)
+                    ?: ($left->position <=> $right->position),
+                'title_desc' => strnatcasecmp($right->title, $left->title)
+                    ?: $this->comparePublishedAt($right, $left)
+                    ?: ($left->position <=> $right->position),
+                default => $this->comparePublishedAt($right, $left)
+                    ?: ($left->position <=> $right->position)
+                    ?: strnatcasecmp($left->title, $right->title),
+            };
         });
 
         return array_map(

@@ -26,6 +26,8 @@ final class EditorShortcodeTest
         $this->itFallsBackToAnInlineNoticeWhenHeadersAreAlreadySent();
         $this->itRendersTemplateChoicesForNewCards();
         $this->itPrefillsDuplicatedCardsAsNewDrafts();
+        $this->itRendersAPreviewForTheCurrentCardState();
+        $this->itProvidesAResetLinkForStartingFresh();
     }
 
     private function itRendersTheEditorForAuthorizedUsers(): void
@@ -158,7 +160,7 @@ final class EditorShortcodeTest
                 'id' => 'card-invalid',
                 'original_id' => '',
                 'back_to' => '/landing-page/',
-                'title' => 'Ungültig',
+                'title' => 'EingabeTitel',
                 'category_id' => 'cat-news',
                 'fields_json' => '{broken',
                 'status' => 'published',
@@ -177,6 +179,8 @@ final class EditorShortcodeTest
         }
 
         $this->assertContains('Die Card-Felder enthalten ungültiges JSON.', $html, 'Invalid input should show an error message.');
+        $this->assertContains('value="EingabeTitel"', $html, 'The title field should keep the submitted value after validation fails.');
+        $this->assertContains('{broken', $html, 'The JSON textarea should keep the submitted value after validation fails.');
         $this->assertCount(0, $repository->items, 'Invalid input must not be stored.');
     }
 
@@ -293,6 +297,70 @@ final class EditorShortcodeTest
         $this->assertContains('card-1-kopie', $html, 'Duplicated cards should get a new id suggestion.');
         $this->assertContains('Sommerlager Kopie', $html, 'Duplicated cards should get a copied title.');
         $this->assertContains('value="draft"', $html, 'Duplicated cards should start as drafts.');
+    }
+
+    private function itRendersAPreviewForTheCurrentCardState(): void
+    {
+        $shortcode = $this->createShortcode(
+            new EditorShortcodeCategoryRepository([
+                new Category('cat-news', 'News', 'news', 'date'),
+            ]),
+            new EditorShortcodeCardRepository([
+                new Card('card-1', 'Sommerlager', 'cat-news', ['teaser' => 'Hallo', 'body' => 'Text'], CardStatus::Published, Visibility::Public),
+            ])
+        );
+
+        $previousGet = $_GET;
+
+        try {
+            $_GET = [
+                'edit_card' => 'card-1',
+            ];
+
+            $html = $shortcode->render();
+        } finally {
+            $_GET = $previousGet;
+        }
+
+        $this->assertContains('Vorschau', $html, 'The editor should render a preview section.');
+        $this->assertContains('Sommerlager', $html, 'The preview should show the card title.');
+        $this->assertContains('Kategorie: News', $html, 'The preview should show the category label.');
+        $this->assertContains('Status: published', $html, 'The preview should show the card status.');
+    }
+
+    private function itProvidesAResetLinkForStartingFresh(): void
+    {
+        $shortcode = new EditorShortcode(
+            new EditorShortcodeCategoryRepository([
+                new Category('cat-news', 'News', 'news', 'date'),
+            ]),
+            new EditorShortcodeCardRepository([
+                new Card('card-1', 'Sommerlager', 'cat-news', [], CardStatus::Published, Visibility::Public),
+            ]),
+            new CardSubmissionHandler(new EditorShortcodeCardRepository()),
+            new EditorAccessGuard(static fn (string $capability): bool => true),
+            requestUri: static fn (): string => '/editor/',
+            homeUrl: static fn (): string => 'https://example.test'
+        );
+
+        $previousGet = $_GET;
+
+        try {
+            $_GET = [
+                'edit_card' => 'card-1',
+                'template' => 'news',
+            ];
+
+            $html = $shortcode->render([
+                'back_to' => '/landing-page/',
+            ]);
+        } finally {
+            $_GET = $previousGet;
+        }
+
+        $this->assertContains('Neu starten', $html, 'The editor should offer a reset link.');
+        $this->assertContains('back_to=%2Flanding-page%2F', $html, 'The reset link should preserve the back target.');
+        $this->assertContains('href="https://example.test/editor/?back_to=%2Flanding-page%2F"', $html, 'The reset link should point back to the clean editor URL.');
     }
 
     private function createShortcode(

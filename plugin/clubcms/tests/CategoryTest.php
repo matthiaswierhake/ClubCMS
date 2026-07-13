@@ -23,7 +23,7 @@ final class CategoryTest
             'cat-news',
             'News',
             'news',
-            'manual',
+            'position_desc',
             ['fd-hero', 'fd-content']
         );
 
@@ -32,7 +32,7 @@ final class CategoryTest
                 'id' => 'cat-news',
                 'label' => 'News',
                 'slug' => 'news',
-                'sortMode' => 'manual',
+                'sortMode' => 'position_desc',
                 'fieldDefinitionIds' => ['fd-hero', 'fd-content'],
             ],
             $category->toArray(),
@@ -46,7 +46,7 @@ final class CategoryTest
             'cat-events',
             'Events',
             'events',
-            'date',
+            'date_asc',
             [
                 4 => 'fd-primary',
                 9 => 'fd-secondary',
@@ -58,7 +58,7 @@ final class CategoryTest
                 'id' => 'cat-events',
                 'label' => 'Events',
                 'slug' => 'events',
-                'sortMode' => 'date',
+                'sortMode' => 'date_asc',
                 'fieldDefinitionIds' => ['fd-primary', 'fd-secondary'],
             ],
             $category->toArray(),
@@ -72,7 +72,7 @@ final class CategoryTest
             'id' => 'cat-members',
             'label' => 'Members',
             'slug' => 'members',
-            'sortMode' => 'manual',
+            'sortMode' => 'title_desc',
             'fieldDefinitionIds' => [
                 2 => 'fd-profile',
                 8 => 'fd-access',
@@ -82,12 +82,18 @@ final class CategoryTest
         $this->assertSame('cat-members', $category->id, 'fromArray() should map id.');
         $this->assertSame('Members', $category->label, 'fromArray() should map label.');
         $this->assertSame('members', $category->slug, 'fromArray() should map slug.');
-        $this->assertSame('manual', $category->sortMode, 'fromArray() should map sort mode.');
+        $this->assertSame('title_desc', $category->sortMode, 'fromArray() should map sort mode.');
         $this->assertSame(
             ['fd-profile', 'fd-access'],
             $category->fieldDefinitionIds,
             'fromArray() should normalize field definition ids.'
         );
+
+        $legacyCategory = Category::fromArray([
+            'sortMode' => 'manual',
+        ]);
+
+        $this->assertSame('position_asc', $legacyCategory->sortMode, 'Legacy manual sort mode should normalize to position_asc.');
     }
 
     private function itFallsBackToDefaultsWhenDataIsMissing(): void
@@ -97,7 +103,7 @@ final class CategoryTest
         $this->assertSame('', $category->id, 'Missing id should default to empty string.');
         $this->assertSame('', $category->label, 'Missing label should default to empty string.');
         $this->assertSame('', $category->slug, 'Missing slug should default to empty string.');
-        $this->assertSame('date', $category->sortMode, 'Missing sort mode should default to date.');
+        $this->assertSame('date_desc', $category->sortMode, 'Missing sort mode should default to date_desc.');
         $this->assertSame([], $category->fieldDefinitionIds, 'Missing fieldDefinitionIds should default to an empty array.');
     }
 

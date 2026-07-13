@@ -13,8 +13,8 @@ Dieses Dokument ist bewusst so aufgebaut, dass wir es laufend erweitern koennen:
 ## Aktueller Stand
 
 - Projektstatus: Inhaltsverwaltung und Frontend-Editor in Aufbau
-- Aktuelle Version: `v0.5.7`
-- Naechster sinnvoller Meilenstein: `v0.5.8`
+- Aktuelle Version: `v0.6.3`
+- Naechster sinnvoller Meilenstein: `v0.6.4`
 
 ## Versionierungsmodell
 
@@ -63,10 +63,7 @@ Erledigt:
 - ✅ Basis-Dokumentation anlegen
 - ✅ Landingpage-Grundstruktur als Shortcode bereitstellen
 - ✅ technische Architektur fuer Cards, Shortcodes und Editoren definieren
-
-Offen:
-
-- ❌ Rollenmodell fuer Admin / Redakteur / eingeloggte Nutzer festlegen
+- ✅ Rollenmodell fuer Admin / Redakteur / eingeloggte Nutzer festlegen
 
 ### v0.2.0 - Card-Grundlage
 
@@ -79,10 +76,10 @@ Erledigt:
 - ✅ Landingpage rendert Kategorien als Spalten
 - ✅ Beitraege werden innerhalb der Spalten angezeigt
 - ✅ Basis-Tests fuer Card-Modell und Rendering ergaenzt
+- ✅ echte Beitragsverwaltung mit Anlegen/Bearbeiten/Loeschen
 
 Offen:
 
-- ❌ echte Beitraegsverwaltung mit Anlegen/Bearbeiten/Loeschen
 - ❌ Sortierung je Kategorie vollstaendig parametrierbar machen
 - ❌ Sichtbarkeitslogik fuer eingeloggte Nutzer praezisieren
 
@@ -190,6 +187,7 @@ Erledigt:
 - ✅ Card-Repositories um getById/delete erweitert
 - ✅ Card-Formular mit Kategorie-, Status- und Sichtbarkeitsfeldern ergaenzt
 - ✅ Testabdeckung fuer Card-Speicherung und -Loeschung ergaenzt
+- ✅ echte Beitragsverwaltung mit Anlegen/Bearbeiten/Loeschen umgesetzt
 
 Offen:
 
@@ -326,17 +324,17 @@ Ziel: Nach dem Bearbeiten springt der Frontend-Editor sauber zur Ausgangsseite z
 
 Erledigt:
 
-- ? klare Ruecksprung-Logik nach Bearbeitung
-- ? `back_to` wird ueber Landingpage und Editor durchgereicht
-- ? Tests fuer den Ruecksprungpfad ergaenzt
-- ? Version auf `v0.5.2` angehoben
+- ✅ klare Ruecksprung-Logik nach Bearbeitung
+- ✅ `back_to` wird ueber Landingpage und Editor durchgereicht
+- ✅ Tests fuer den Ruecksprungpfad ergaenzt
+- ✅ Version auf `v0.5.2` angehoben
 
 Offen:
 
-- ? bessere Eingabevalidierung
-- ? sichtbare Fehlermeldungen fuer Eingabeprobleme
-- ? bessere UI fuer Redakteure
-- ? Vorlagen und Schnellaktionen
+- ❌ bessere Eingabevalidierung
+- ❌ sichtbare Fehlermeldungen fuer Eingabeprobleme
+- ❌ bessere UI fuer Redakteure
+- ❌ Vorlagen und Schnellaktionen
 
 ### v0.5.3 - Dashboard-Kachel fuer den Editor
 
@@ -417,13 +415,93 @@ Offen:
 
 - ❌ weitere Schnellaktionen
 
+### v0.5.8 - Editor-Vorschau
+
+Ziel: Redakteure sehen im Editor sofort eine grobe Vorschau der Card.
+
+Erledigt:
+
+- ✅ Vorschau im Frontend-Editor ergaenzt
+- ✅ Vorschau zeigt Titel, Kategorie, Status, Sichtbarkeit und Position
+- ✅ Testabdeckung fuer die Vorschau ergaenzt
+
+Offen:
+
+### v0.5.9 - Eingaben nach Fehler behalten
+
+Ziel: Der Editor vergisst nach einer Fehlermeldung die Eingaben nicht.
+
+Erledigt:
+
+- ✅ Formularfelder behalten die zuletzt eingegebenen Werte nach Validierungsfehlern
+- ✅ Vorschau orientiert sich an den aktuellen Eingaben
+- ✅ Testabdeckung fuer das Beibehalten von Eingaben ergaenzt
+
+Offen:
+
+- ❌ weitere Komfortfunktionen
+
+### v0.6.0 - Formular neu starten
+
+Ziel: Der Editor kann mit einem Klick wieder als frisches Formular gestartet werden.
+
+Erledigt:
+
+- ✅ Reset-Link im Editorformular ergaenzt
+- ✅ Reset-Link startet ohne Bearbeitungs- oder Vorlagenkontext
+- ✅ Testabdeckung fuer den Reset-Link ergaenzt
+
+Offen:
+
+- ❌ weitere Komfortfunktionen
+
+### v0.6.1 - Rollenmodell zentralisiert
+
+Ziel: Admin, Redakteur und eingeloggte Nutzer haben ein einheitliches, zentrales Rollenmodell.
+
+Erledigt:
+
+- ✅ Admin/Redakteur/Logged-in-Pruefung in einer zentralen Security-Klasse zusammengefasst
+- ✅ Frontend-Editor und Landingpage nutzen das Rollenmodell fuer ihre Berechtigungen
+- ✅ Testabdeckung fuer das Rollenmodell ergaenzt
+
+Offen:
+
+- ❌ weitere Feinschliffe an Rollen- oder Berechtigungslogik
+
+### v0.6.2 - Sortierung je Kategorie vollstaendig parametrierbar
+
+Ziel: Jede Kategorie kann ihre Card-Sortierung direkt im Backend festlegen.
+
+Erledigt:
+
+- ✅ Sortiermodi fuer Datum, Position und Titel ergaenzt
+- ✅ auf- und absteigende Sortierung je Kategorie moeglich
+- ✅ bestehende Legacy-Werte wie `date` und `manual` werden normalisiert
+- ✅ Backend-Auswahl und Anzeige der Sortierung erweitert
+- ✅ Landingpage sortiert Cards je Kategorie nach der konfigurierten Reihenfolge
+- ✅ Testabdeckung fuer Konfiguration und Sortierung ergaenzt
+
+### v0.6.3 - Sichtbarkeitslogik fuer Inhalte
+
+Ziel: Cards werden je nach Rolle und Login-Status passend sichtbar.
+
+Erledigt:
+
+- ✅ Public-Cards fuer alle sichtbar
+- ✅ Members-Cards nur fuer eingeloggte Nutzer sichtbar
+- ✅ Editorial-Cards fuer Redakteure und Administratoren sichtbar
+- ✅ Landingpage filtert Cards vor dem Rendern nach Sichtbarkeit
+- ✅ AccessRoleModel um Sichtbarkeitspruefung erweitert
+- ✅ Testabdeckung fuer Sichtbarkeit ergaenzt
+
 ## Fortschrittspflege
 
 Wenn wir weiterarbeiten, wird dieser Block jeweils aktualisiert:
 
-- Version: `v0.5.7`
-- Letzte Aenderung: 2026-07-13
-- Naechster Fokus: weitere Schnellaktionen und Vorschau
+- Version: `v0.6.3`
+- Letzte Aenderung: 2026-07-14
+- Naechster Fokus: weitere Feinschliffe an Rollen- oder Berechtigungslogik
 
 ## Aenderungslog
 
@@ -498,6 +576,7 @@ Wenn wir weiterarbeiten, wird dieser Block jeweils aktualisiert:
 - Cards im Backend verwaltbar gemacht
 - Card-Adminseite eingefuehrt
 - Card-Handler und Tests ergaenzt
+- echte Beitragsverwaltung mit Anlegen/Bearbeiten/Loeschen umgesetzt
 
 ### v0.3.2 - Einzelspalten-Shortcode
 
@@ -550,4 +629,3 @@ Wenn wir weiterarbeiten, wird dieser Block jeweils aktualisiert:
 - Medienverwaltung pro Card
 - automatische Startseiten-Teaser aus Kategorien
 - Protokollierung von Aenderungen
-

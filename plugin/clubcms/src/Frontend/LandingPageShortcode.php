@@ -8,6 +8,8 @@ use ClubCMS\Repository\CategoryRepositoryInterface;
 use ClubCMS\Repository\CardRepositoryInterface;
 use ClubCMS\Infrastructure\EditorSettingsStorageInterface;
 use ClubCMS\Rendering\LandingPageRenderer;
+use ClubCMS\Domain\Card;
+use ClubCMS\Security\AccessRoleModel;
 
 final class LandingPageShortcode
 {
@@ -16,6 +18,7 @@ final class LandingPageShortcode
         private readonly CardRepositoryInterface $cardRepository,
         private readonly LandingPageRenderer $renderer = new LandingPageRenderer(),
         private readonly ?EditorSettingsStorageInterface $editorSettingsStorage = null,
+        private readonly AccessRoleModel $roles = new AccessRoleModel(),
     ) {
     }
 
@@ -30,14 +33,15 @@ final class LandingPageShortcode
      */
     public function render(array $attributes = []): string
     {
-        $showEditorControls = function_exists('is_user_logged_in') && is_user_logged_in();
+        $showEditorControls = $this->roles->canSeeFrontendControls();
         $categories = $this->resolveCategoriesForColumns($attributes);
         $editorUrl = $this->resolveEditorUrl($attributes);
         $backToUrl = $this->currentUrl();
+        $cards = $this->filterVisibleCards($this->cardRepository->all());
 
         return $this->renderer->render(
             $categories,
-            $this->cardRepository->all(),
+            $cards,
             $showEditorControls,
             $editorUrl,
             $backToUrl
@@ -49,14 +53,15 @@ final class LandingPageShortcode
      */
     public function renderColumn(array $attributes = []): string
     {
-        $showEditorControls = function_exists('is_user_logged_in') && is_user_logged_in();
+        $showEditorControls = $this->roles->canSeeFrontendControls();
         $category = $this->resolveSingleCategory($attributes);
         $editorUrl = $this->resolveEditorUrl($attributes);
         $backToUrl = $this->currentUrl();
+        $cards = $this->filterVisibleCards($this->cardRepository->all());
 
         return $this->renderer->renderColumn(
             $category,
-            $this->cardRepository->all(),
+            $cards,
             $showEditorControls,
             $editorUrl,
             $backToUrl
@@ -261,5 +266,17 @@ final class LandingPageShortcode
         }
 
         return $path;
+    }
+
+    /**
+     * @param array<int, Card> $cards
+     * @return array<int, Card>
+     */
+    private function filterVisibleCards(array $cards): array
+    {
+        return array_values(array_filter(
+            $cards,
+            fn (Card $card): bool => $this->roles->canSeeVisibility($card->visibility)
+        ));
     }
 }

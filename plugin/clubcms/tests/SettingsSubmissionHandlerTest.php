@@ -59,7 +59,7 @@ final class SettingsSubmissionHandlerTest
             'id' => 'cat-news',
             'label' => 'News',
             'slug' => 'News Items',
-            'sort_mode' => 'manual',
+            'sort_mode' => 'title_desc',
             'field_definition_ids' => 'fd-hero, fd-content',
         ]);
 
@@ -67,7 +67,7 @@ final class SettingsSubmissionHandlerTest
         $this->assertCount(1, $categoryRepository->items, 'Category should be stored.');
         $this->assertSame('cat-news', $categoryRepository->items[0]->id, 'Stored category should use the normalized id.');
         $this->assertSame('news-items', $categoryRepository->items[0]->slug, 'Stored category should normalize the slug.');
-        $this->assertSame('manual', $categoryRepository->items[0]->sortMode, 'Stored category should keep sort mode.');
+        $this->assertSame('title_desc', $categoryRepository->items[0]->sortMode, 'Stored category should keep sort mode.');
         $this->assertSame(['fd-hero', 'fd-content'], $categoryRepository->items[0]->fieldDefinitionIds, 'Stored category should normalize the field definition ids.');
     }
 

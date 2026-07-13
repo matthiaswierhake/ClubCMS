@@ -153,6 +153,12 @@ final class EditorShortcode
     {
         $presetCategoryId = $this->getPresetCategoryId();
         $card = $editingCard ?? new Card('', '', $presetCategoryId, [], publishedAt: null);
+        $categoryLabels = [];
+        $hasPostValidationError = $this->isSubmittedCardPost() && $this->submissionHandler->getLastError() !== null;
+
+        foreach ($categories as $category) {
+            $categoryLabels[$category->id] = $category->label;
+        }
 
         if ($editingCard === null && $this->duplicateCardId !== '') {
             $duplicateSource = $this->cardRepository->getById($this->duplicateCardId);
@@ -175,28 +181,58 @@ final class EditorShortcode
         if ($editingCard === null && $this->templateKey !== '') {
             $card = $this->applyTemplate($card, $this->templateKey);
         }
+
+        $idValue = $hasPostValidationError ? $this->postedString('id', $card->id) : $card->id;
+        $titleValue = $hasPostValidationError ? $this->postedString('title', $card->title) : $card->title;
+        $categoryIdValue = $hasPostValidationError ? $this->postedString('category_id', $card->categoryId) : $card->categoryId;
+        $statusValue = $hasPostValidationError ? $this->postedString('status', $card->status->value) : $card->status->value;
+        $visibilityValue = $hasPostValidationError ? $this->postedString('visibility', $card->visibility->value) : $card->visibility->value;
+        $positionValue = $hasPostValidationError ? $this->postedString('position', (string) $card->position) : (string) $card->position;
+        $publishedAtValue = $hasPostValidationError ? $this->postedString('published_at', $card->publishedAt?->format('Y-m-d H:i:s') ?? '') : ($card->publishedAt?->format('Y-m-d H:i:s') ?? '');
+        $fieldsJsonValue = $hasPostValidationError
+            ? $this->postedString('fields_json', (string) json_encode($card->fields, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE))
+            : (string) json_encode($card->fields, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        $isStaticValue = $hasPostValidationError ? $this->postedBoolean('is_static', $card->isStatic) : $card->isStatic;
         $isEditMode = $editingCard !== null;
+        $previewCategoryLabel = $categoryLabels[$categoryIdValue] ?? ($categoryIdValue !== '' ? $categoryIdValue : 'Keine Kategorie');
+        $previewFields = array_keys($card->fields);
+        $previewFieldsSummary = $previewFields === [] ? 'Keine Felder gesetzt' : implode(', ', array_slice($previewFields, 0, 4));
 
         ob_start();
         ?>
         <article class="clubcms-editor__form">
-            <h2><?php echo $isEditMode ? 'Card bearbeiten' : 'Card anlegen'; ?></h2>
+            <div class="clubcms-editor__form-header">
+                <h2><?php echo $isEditMode ? 'Card bearbeiten' : 'Card anlegen'; ?></h2>
+                <a class="button button-small" href="<?php echo $this->escapeAttr($this->buildResetUrl()); ?>">Neu starten</a>
+            </div>
+            <section class="clubcms-editor__preview">
+                <h3>Vorschau</h3>
+                <p>So wird die Card in der groben Struktur dargestellt.</p>
+                <div class="clubcms-editor__preview-card">
+                    <p><strong><?php echo $this->escapeHtml($card->title !== '' ? $card->title : 'Ohne Titel'); ?></strong></p>
+                    <p>Kategorie: <?php echo $this->escapeHtml($previewCategoryLabel); ?></p>
+                    <p>Status: <?php echo $this->escapeHtml($card->status->value); ?></p>
+                    <p>Sichtbarkeit: <?php echo $this->escapeHtml($card->visibility->value); ?></p>
+                    <p>Position: <?php echo $this->escapeHtml((string) $card->position); ?></p>
+                    <p>Felder: <?php echo $this->escapeHtml($previewFieldsSummary); ?></p>
+                </div>
+            </section>
             <form method="post" action="<?php echo $this->escapeAttr($this->currentUrl()); ?>">
                 <?php wp_nonce_field('clubcms_save_card'); ?>
                 <input type="hidden" name="clubcms_form" value="card" />
                 <input type="hidden" name="clubcms_action" value="save" />
-                <input type="hidden" name="original_id" value="<?php echo $this->escapeAttr($card->id); ?>" />
+                <input type="hidden" name="original_id" value="<?php echo $this->escapeAttr($idValue); ?>" />
                 <input type="hidden" name="back_to" value="<?php echo $this->escapeAttr($this->backToUrl); ?>" />
                 <input type="hidden" name="template" value="<?php echo $this->escapeAttr($this->templateKey); ?>" />
                 <input type="hidden" name="duplicate_card" value="<?php echo $this->escapeAttr($this->duplicateCardId); ?>" />
                 <table class="form-table" role="presentation">
                     <tr>
                         <th><label for="card_id">ID</label></th>
-                        <td><input name="id" id="card_id" type="text" class="regular-text" required value="<?php echo $this->escapeAttr($card->id); ?>"></td>
+                        <td><input name="id" id="card_id" type="text" class="regular-text" required value="<?php echo $this->escapeAttr($idValue); ?>"></td>
                     </tr>
                     <tr>
                         <th><label for="card_title">Titel</label></th>
-                        <td><input name="title" id="card_title" type="text" class="regular-text" required value="<?php echo $this->escapeAttr($card->title); ?>"></td>
+                        <td><input name="title" id="card_title" type="text" class="regular-text" required value="<?php echo $this->escapeAttr($titleValue); ?>"></td>
                     </tr>
                     <tr>
                         <th><label for="category_id">Kategorie</label></th>
@@ -204,7 +240,7 @@ final class EditorShortcode
                             <select name="category_id" id="category_id">
                                 <option value="">Bitte wählen</option>
                                 <?php foreach ($categories as $category): ?>
-                                    <option value="<?php echo $this->escapeAttr($category->id); ?>" <?php echo $category->id === $card->categoryId ? 'selected' : ''; ?>>
+                                    <option value="<?php echo $this->escapeAttr($category->id); ?>" <?php echo $category->id === $categoryIdValue ? 'selected' : ''; ?>>
                                         <?php echo $this->escapeHtml($category->label); ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -215,9 +251,9 @@ final class EditorShortcode
                         <th><label for="status">Status</label></th>
                         <td>
                             <select name="status" id="status">
-                                <option value="draft" <?php echo $card->status->value === 'draft' ? 'selected' : ''; ?>>Draft</option>
-                                <option value="published" <?php echo $card->status->value === 'published' ? 'selected' : ''; ?>>Published</option>
-                                <option value="archived" <?php echo $card->status->value === 'archived' ? 'selected' : ''; ?>>Archived</option>
+                                <option value="draft" <?php echo $statusValue === 'draft' ? 'selected' : ''; ?>>Draft</option>
+                                <option value="published" <?php echo $statusValue === 'published' ? 'selected' : ''; ?>>Published</option>
+                                <option value="archived" <?php echo $statusValue === 'archived' ? 'selected' : ''; ?>>Archived</option>
                             </select>
                         </td>
                     </tr>
@@ -225,27 +261,27 @@ final class EditorShortcode
                         <th><label for="visibility">Sichtbarkeit</label></th>
                         <td>
                             <select name="visibility" id="visibility">
-                                <option value="public" <?php echo $card->visibility->value === 'public' ? 'selected' : ''; ?>>Public</option>
-                                <option value="members" <?php echo $card->visibility->value === 'members' ? 'selected' : ''; ?>>Members</option>
-                                <option value="editorial" <?php echo $card->visibility->value === 'editorial' ? 'selected' : ''; ?>>Editorial</option>
+                                <option value="public" <?php echo $visibilityValue === 'public' ? 'selected' : ''; ?>>Public</option>
+                                <option value="members" <?php echo $visibilityValue === 'members' ? 'selected' : ''; ?>>Members</option>
+                                <option value="editorial" <?php echo $visibilityValue === 'editorial' ? 'selected' : ''; ?>>Editorial</option>
                             </select>
                         </td>
                     </tr>
                     <tr>
                         <th><label for="position">Position</label></th>
-                        <td><input name="position" id="position" type="number" class="small-text" value="<?php echo $this->escapeAttr((string) $card->position); ?>"></td>
+                        <td><input name="position" id="position" type="number" class="small-text" value="<?php echo $this->escapeAttr($positionValue); ?>"></td>
                     </tr>
                     <tr>
                         <th><label for="published_at">Veröffentlicht am</label></th>
-                        <td><input name="published_at" id="published_at" type="text" class="regular-text" placeholder="2026-07-13 10:00:00" value="<?php echo $this->escapeAttr($card->publishedAt?->format('Y-m-d H:i:s') ?? ''); ?>"></td>
+                        <td><input name="published_at" id="published_at" type="text" class="regular-text" placeholder="2026-07-13 10:00:00" value="<?php echo $this->escapeAttr($publishedAtValue); ?>"></td>
                     </tr>
                     <tr>
                         <th><label for="is_static">Statisch</label></th>
-                        <td><label><input name="is_static" id="is_static" type="checkbox" value="1" <?php echo $card->isStatic ? 'checked' : ''; ?>> Statische Card</label></td>
+                        <td><label><input name="is_static" id="is_static" type="checkbox" value="1" <?php echo $isStaticValue ? 'checked' : ''; ?>> Statische Card</label></td>
                     </tr>
                     <tr>
                         <th><label for="fields_json">Felder als JSON</label></th>
-                        <td><textarea name="fields_json" id="fields_json" class="large-text code" rows="10"><?php echo $this->escapeHtml((string) json_encode($card->fields, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)); ?></textarea></td>
+                        <td><textarea name="fields_json" id="fields_json" class="large-text code" rows="10"><?php echo $this->escapeHtml($fieldsJsonValue); ?></textarea></td>
                     </tr>
                 </table>
                 <?php submit_button($isEditMode ? 'Card aktualisieren' : 'Card speichern'); ?>
@@ -455,6 +491,17 @@ final class EditorShortcode
         return add_query_arg($queryArgs, $baseUrl);
     }
 
+    private function buildResetUrl(): string
+    {
+        $queryArgs = [];
+
+        if ($this->backToUrl !== '') {
+            $queryArgs['back_to'] = $this->backToUrl;
+        }
+
+        return add_query_arg($queryArgs, $this->currentUrl());
+    }
+
     private function redirect(string $url): void
     {
         $redirect = $this->redirect ?? static function (string $target): void {
@@ -628,6 +675,37 @@ final class EditorShortcode
         $value = preg_replace('/[^a-z0-9_-]/', '', $value) ?? '';
 
         return trim($value, "_-");
+    }
+
+    private function postedString(string $key, string $fallback = ''): string
+    {
+        if (! array_key_exists($key, $_POST)) {
+            return $fallback;
+        }
+
+        $value = $_POST[$key];
+
+        if (! is_string($value)) {
+            return $fallback;
+        }
+
+        $value = trim($value);
+
+        return $value === '' ? $fallback : $value;
+    }
+
+    private function postedBoolean(string $key, bool $fallback = false): bool
+    {
+        if (! array_key_exists($key, $_POST)) {
+            return $fallback;
+        }
+
+        return ! empty($_POST[$key]);
+    }
+
+    private function isSubmittedCardPost(): bool
+    {
+        return ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['clubcms_form'] ?? '') === 'card';
     }
 
     /**

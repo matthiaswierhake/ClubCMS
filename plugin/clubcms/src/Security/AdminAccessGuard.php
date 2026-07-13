@@ -6,8 +6,7 @@ namespace ClubCMS\Security;
 
 final class AdminAccessGuard
 {
-    /** @var callable(string): bool|null */
-    private $canManageOptions;
+    private AccessRoleModel $roles;
 
     /** @var callable(string): void|null */
     private $redirect;
@@ -28,7 +27,7 @@ final class AdminAccessGuard
         $homeUrl = null,
         $terminate = null,
     ) {
-        $this->canManageOptions = $canManageOptions;
+        $this->roles = new AccessRoleModel($canManageOptions);
         $this->redirect = $redirect;
         $this->requestUri = $requestUri;
         $this->homeUrl = $homeUrl;
@@ -41,7 +40,7 @@ final class AdminAccessGuard
             return;
         }
 
-        if ($this->canManageOptions() ) {
+        if ($this->roles->isAdmin()) {
             return;
         }
 
@@ -58,15 +57,6 @@ final class AdminAccessGuard
         };
 
         $terminate();
-    }
-
-    private function canManageOptions(): bool
-    {
-        if ($this->canManageOptions !== null) {
-            return (bool) ($this->canManageOptions)('manage_options');
-        }
-
-        return function_exists('current_user_can') && current_user_can('manage_options');
     }
 
     private function shouldBypass(): bool

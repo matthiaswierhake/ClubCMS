@@ -26,13 +26,16 @@ Die gewuenschte Struktur ist im Kern:
 5. Kadence-Zeile mit 4 Spalten
 6. pro Spalte eine Card mit Beitraegen eines Themas oder einer Kategorie
 
-Die Beitraege innerhalb einer Card werden zunaechst zeitlich sortiert angezeigt.
+Die Beitraege innerhalb einer Card werden je Kategorie nach der dort konfigurierten Sortierung angezeigt.
 
 ## Inhaltslogik
 
 - Jede Spalte bildet ein Thema oder eine Kategorie ab.
 - Die Card enthaelt mehrere Beitraege zu diesem Thema.
-- Die Darstellung erfolgt fuer nicht eingeloggte Nutzer rein lesend.
+- Die Sortierung pro Kategorie kann im Backend festgelegt werden.
+- Public-Cards sind fuer alle sichtbar.
+- Cards mit `members` sind nur fuer eingeloggte Nutzer sichtbar.
+- Cards mit `editorial` sind fuer Redakteure und Administratoren sichtbar.
 - Fuer eingeloggte Nutzer werden Bearbeitungsaktionen eingeblendet.
 
 Vorgesehene Aktionen:
@@ -47,8 +50,14 @@ Diese Aktionen koennen direkt in einen zentralen Editor fuehren, der von ueberal
 
 - Admin: darf das WordPress-Backend nutzen
 - Redakteur: arbeitet ueber den ClubCMS-Editor, nicht ueber das Backend
-- eingeloggte Nutzer: sehen je nach Berechtigung die Bearbeitungssymbole
+- eingeloggte Nutzer: sehen die Bearbeitungssymbole auf der Landingpage
 - nicht eingeloggte Nutzer: sehen nur Inhalte
+
+Intern gilt dabei die einfache Trennung:
+
+- `manage_options` = Admin
+- `edit_posts` = Redakteur
+- eingeloggt = darf die Frontend-Bearbeitungssymbole sehen
 
 ## Kategorien und Felder
 
@@ -151,6 +160,12 @@ Auch die Dashboard-Kachel fuehrt direkt in diesen Editor, damit Redakteure ohne 
 Im Frontend-Editor gibt es Vorlagen fuer neue Beitraege wie Standard, News und Veranstaltung.
 
 Zusaetzlich koennen bestehende Cards direkt dupliziert werden, damit neue Entwuerfe schneller entstehen.
+
+Der Editor zeigt ausserdem eine einfache Vorschau der Card, damit du Titel, Kategorie, Status und Sichtbarkeit sofort einordnen kannst.
+
+Wenn eine Eingabe fehlschlaegt, bleiben die zuletzt eingegebenen Werte im Formular erhalten, damit du nicht neu anfangen musst.
+
+Im Editor gibt es auch einen Reset-Link, mit dem du sofort wieder eine neue Card ohne Bearbeitungs- oder Vorlagenkontext startest.
 
 Wenn bei der Eingabe etwas nicht passt, zeigt der Editor eine direkte Fehlermeldung im Frontend an.
 

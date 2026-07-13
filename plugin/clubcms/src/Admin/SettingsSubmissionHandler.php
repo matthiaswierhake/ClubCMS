@@ -37,7 +37,7 @@ final class SettingsSubmissionHandler
         $originalId = $this->sanitizeKey((string) ($post['original_id'] ?? $id));
         $label = $this->sanitizeText((string) ($post['label'] ?? ''));
         $slug = $this->sanitizeTitle((string) ($post['slug'] ?? ''));
-        $sortMode = $this->sanitizeKey((string) ($post['sort_mode'] ?? 'date'));
+        $sortMode = Category::normalizeSortMode($this->sanitizeKey((string) ($post['sort_mode'] ?? 'date_desc')));
         $fieldDefinitionIds = $this->normalizeIdList((string) ($post['field_definition_ids'] ?? ''));
 
         if ($id === '' || $label === '' || $slug === '') {

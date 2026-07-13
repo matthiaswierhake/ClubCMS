@@ -11,11 +11,26 @@ use ClubCMS\Repository\CategoryRepositoryInterface;
 
 final class CardsPage
 {
+    /** @var callable(string): void|null */
+    private $redirect;
+
+    /** @var callable(): bool|null */
+    private $headersSent;
+
+    /** @var callable(): void|null */
+    private $terminate;
+
     public function __construct(
         private readonly CardRepositoryInterface $cardRepository,
         private readonly CategoryRepositoryInterface $categoryRepository,
         private readonly CardSubmissionHandler $submissionHandler,
+        $redirect = null,
+        $headersSent = null,
+        $terminate = null,
     ) {
+        $this->redirect = $redirect;
+        $this->headersSent = $headersSent;
+        $this->terminate = $terminate;
     }
 
     public function render(): void
@@ -33,7 +48,7 @@ final class CardsPage
 
     private function handleSubmit(): void
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || ($_POST['clubcms_form'] ?? '') !== 'card') {
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || ($_POST['clubcms_form'] ?? '') !== 'card') {
             return;
         }
 
@@ -51,7 +66,7 @@ final class CardsPage
             }
 
             if ($this->redirectIfPossible(add_query_arg(['page' => 'clubcms-cards', 'deleted' => '1'], admin_url('admin.php')))) {
-                exit;
+                $this->terminate();
             }
 
             $_GET['deleted'] = '1';
@@ -63,7 +78,7 @@ final class CardsPage
         }
 
         if ($this->redirectIfPossible(add_query_arg(['page' => 'clubcms-cards', 'saved' => '1'], admin_url('admin.php')))) {
-            exit;
+            $this->terminate();
         }
 
         $_GET['saved'] = '1';
@@ -247,15 +262,36 @@ final class CardsPage
 
     private function redirectIfPossible(string $url): bool
     {
-        if (function_exists('headers_sent') && headers_sent()) {
+        if ($this->headersAlreadySent()) {
             return false;
         }
 
-        if (function_exists('wp_safe_redirect')) {
-            wp_safe_redirect($url);
-            return true;
+        $redirect = $this->redirect ?? static function (string $target): void {
+            if (function_exists('wp_safe_redirect')) {
+                wp_safe_redirect($target);
+            }
+        };
+
+        $redirect($url);
+
+        return true;
+    }
+
+    private function terminate(): void
+    {
+        $terminate = $this->terminate ?? static function (): void {
+            exit;
+        };
+
+        $terminate();
+    }
+
+    private function headersAlreadySent(): bool
+    {
+        if ($this->headersSent !== null) {
+            return (bool) ($this->headersSent)();
         }
 
-        return false;
+        return function_exists('headers_sent') && headers_sent();
     }
 }

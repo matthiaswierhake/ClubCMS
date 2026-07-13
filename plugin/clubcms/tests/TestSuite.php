@@ -71,6 +71,7 @@ final class TestSuite
             CategoryTest::class,
             CardTest::class,
             CardSubmissionHandlerTest::class,
+            AccessRoleModelTest::class,
             AdminAccessGuardTest::class,
             AdminBarGuardTest::class,
             AdminBarCssTest::class,
@@ -81,6 +82,7 @@ final class TestSuite
             LandingPageRendererTest::class,
             LandingPageShortcodeTest::class,
             LandingPageColumnShortcodeTest::class,
+            CardsPageTest::class,
         ];
     }
 }

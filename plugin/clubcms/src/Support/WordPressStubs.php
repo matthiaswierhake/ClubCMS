@@ -63,7 +63,13 @@ if (! function_exists('add_query_arg')) {
 if (! function_exists('admin_url')) {
     function admin_url($path = '', $scheme = 'admin')
     {
-        return (string) $path;
+        $path = (string) $path;
+
+        if ($path === '') {
+            return '/wp-admin/';
+        }
+
+        return '/' . ltrim($path, '/');
     }
 }
 
@@ -184,7 +190,16 @@ if (! function_exists('sanitize_title')) {
 if (! function_exists('submit_button')) {
     function submit_button($text = null, $type = 'primary', $name = 'submit', $wrap = true, $other_attributes = null)
     {
-        return '';
+        $label = $text !== null ? (string) $text : 'Submit';
+        $class = 'button';
+
+        if ($type !== 'primary') {
+            $class .= ' button-' . (string) $type;
+        }
+
+        echo '<button type="submit" class="' . $class . '">' . $label . '</button>';
+
+        return null;
     }
 }
 

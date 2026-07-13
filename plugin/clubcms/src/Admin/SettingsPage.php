@@ -182,8 +182,9 @@ final class SettingsPage
 
     private function renderCategoryForm(?Category $editingCategory): string
     {
-        $category = $editingCategory ?? new Category('', '', '', 'date', []);
+        $category = $editingCategory ?? new Category('', '', '', 'date_desc', []);
         $isEditMode = $editingCategory !== null;
+        $sortModeOptions = Category::sortModeOptions();
 
         ob_start();
         ?>
@@ -210,8 +211,11 @@ final class SettingsPage
                     <th><label for="sort_mode">Sortierung</label></th>
                     <td>
                         <select name="sort_mode" id="sort_mode">
-                            <option value="date" <?php echo $category->sortMode === 'date' ? 'selected' : ''; ?>>Datum</option>
-                            <option value="manual" <?php echo $category->sortMode === 'manual' ? 'selected' : ''; ?>>Manuell</option>
+                            <?php foreach ($sortModeOptions as $value => $label): ?>
+                                <option value="<?php echo esc_attr($value); ?>" <?php echo Category::normalizeSortMode($category->sortMode) === $value ? 'selected' : ''; ?>>
+                                    <?php echo esc_html($label); ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </td>
                 </tr>
@@ -347,7 +351,7 @@ final class SettingsPage
             echo '<td>' . esc_html($item->id) . '</td>';
             echo '<td>' . esc_html($item->label) . '</td>';
             echo '<td>' . esc_html($item->slug) . '</td>';
-            echo '<td>' . esc_html($item->sortMode) . '</td>';
+            echo '<td>' . esc_html(Category::sortModeLabel($item->sortMode)) . '</td>';
             echo '<td>' . esc_html(implode(', ', $item->fieldDefinitionIds)) . '</td>';
             echo '<td>' . $this->renderEditLink('clubcms-categories', 'edit_category', $item->id, 'Bearbeiten') . ' ' . $this->renderDeleteForm('category', $item->id) . '</td>';
             echo '</tr>';

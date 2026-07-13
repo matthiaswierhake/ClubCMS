@@ -17,6 +17,7 @@ final class LandingPageRendererTest
     public function run(): void
     {
         $this->itRendersAFourColumnLandingPage();
+        $this->itSortsCardsAccordingToCategoryConfiguration();
         $this->itAddsEditorControlsForLoggedInUsers();
         $this->itUsesConfiguredFrontendEditorUrls();
     }
@@ -25,8 +26,8 @@ final class LandingPageRendererTest
     {
         $renderer = new LandingPageRenderer();
         $html = $renderer->render([
-            new Category('cat-news', 'News', 'news', 'date'),
-            new Category('cat-events', 'Termine', 'termine', 'manual'),
+            new Category('cat-news', 'News', 'news', 'date_desc'),
+            new Category('cat-events', 'Termine', 'termine', 'position_asc'),
         ], [
             new Card('card-1', 'Sommerlager startet', 'cat-news', [], CardStatus::Published, publishedAt: new DateTimeImmutable('2026-07-10 12:00:00', new DateTimeZone('UTC'))),
             new Card('card-2', 'Vereinsmeisterschaft', 'cat-events', [], CardStatus::Draft, position: 2),
@@ -46,11 +47,36 @@ final class LandingPageRendererTest
         $this->assertContains('category_id=cat-news', $html, 'New-card action should prefill the category.');
     }
 
+    private function itSortsCardsAccordingToCategoryConfiguration(): void
+    {
+        $renderer = new LandingPageRenderer();
+
+        $dateSortedHtml = $renderer->renderColumn(
+            new Category('cat-news', 'News', 'news', 'date_desc'),
+            [
+                new Card('card-old', 'Älterer Beitrag', 'cat-news', [], CardStatus::Published, publishedAt: new DateTimeImmutable('2026-07-01 12:00:00', new DateTimeZone('UTC'))),
+                new Card('card-new', 'Neuer Beitrag', 'cat-news', [], CardStatus::Published, publishedAt: new DateTimeImmutable('2026-07-10 12:00:00', new DateTimeZone('UTC'))),
+            ]
+        );
+
+        $this->assertOrder('Neuer Beitrag', 'Älterer Beitrag', $dateSortedHtml, 'Date-desc sorting should show newer cards first.');
+
+        $titleSortedHtml = $renderer->renderColumn(
+            new Category('cat-events', 'Termine', 'termine', 'title_asc'),
+            [
+                new Card('card-z', 'Zulu', 'cat-events', [], CardStatus::Published, position: 2),
+                new Card('card-a', 'Alpha', 'cat-events', [], CardStatus::Draft, position: 1),
+            ]
+        );
+
+        $this->assertOrder('Alpha', 'Zulu', $titleSortedHtml, 'Title-asc sorting should show alphabetically ascending cards first.');
+    }
+
     private function itAddsEditorControlsForLoggedInUsers(): void
     {
         $renderer = new LandingPageRenderer();
         $html = $renderer->render([
-            new Category('cat-news', 'News', 'news', 'date'),
+            new Category('cat-news', 'News', 'news', 'date_desc'),
         ], [
             new Card('card-1', 'Sommerlager startet', 'cat-news', [], CardStatus::Published, publishedAt: new DateTimeImmutable('2026-07-10 12:00:00', new DateTimeZone('UTC'))),
         ], true);
@@ -65,7 +91,7 @@ final class LandingPageRendererTest
     {
         $renderer = new LandingPageRenderer();
         $html = $renderer->render([
-            new Category('cat-news', 'News', 'news', 'date'),
+            new Category('cat-news', 'News', 'news', 'date_desc'),
         ], [
             new Card('card-1', 'Sommerlager startet', 'cat-news', [], CardStatus::Published, publishedAt: new DateTimeImmutable('2026-07-10 12:00:00', new DateTimeZone('UTC'))),
         ], true, 'https://example.test/editor/');
@@ -79,6 +105,16 @@ final class LandingPageRendererTest
     {
         if (! str_contains($haystack, $needle)) {
             throw new RuntimeException($message . PHP_EOL . 'Missing: ' . $needle);
+        }
+    }
+
+    private function assertOrder(string $first, string $second, string $haystack, string $message): void
+    {
+        $firstPosition = strpos($haystack, $first);
+        $secondPosition = strpos($haystack, $second);
+
+        if ($firstPosition === false || $secondPosition === false || $firstPosition >= $secondPosition) {
+            throw new RuntimeException($message . PHP_EOL . 'First: ' . $first . PHP_EOL . 'Second: ' . $second);
         }
     }
 }
