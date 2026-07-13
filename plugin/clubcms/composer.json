@@ -10,6 +10,16 @@
       "ClubCMS\\": "src/"
     }
   },
+  "autoload-dev": {
+    "psr-4": {
+      "ClubCMS\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": [
+      "php tests/run.php"
+    ]
+  },
   "config": {
     "sort-packages": true
   },
