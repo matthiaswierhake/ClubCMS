@@ -70,6 +70,7 @@ final class TestSuite
             FieldDefinitionTest::class,
             CategoryTest::class,
             CardTest::class,
+            CardSubmissionHandlerTest::class,
             SettingsSubmissionHandlerTest::class,
             LandingPageRendererTest::class,
             LandingPageShortcodeTest::class,

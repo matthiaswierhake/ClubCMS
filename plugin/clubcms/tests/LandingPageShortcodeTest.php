@@ -52,7 +52,16 @@ final class EmptyCardRepository implements CardRepositoryInterface
         return [];
     }
 
+    public function getById(string $id): ?\ClubCMS\Domain\Card
+    {
+        return null;
+    }
+
     public function save(\ClubCMS\Domain\Card $card): void
+    {
+    }
+
+    public function delete(string $id): void
     {
     }
 }

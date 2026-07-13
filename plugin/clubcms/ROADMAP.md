@@ -13,8 +13,8 @@ Dieses Dokument ist bewusst so aufgebaut, dass wir es laufend erweitern können:
 ## Aktueller Stand
 
 - Projektstatus: Inhaltsverwaltung begonnen
-- Aktuelle Version: `v0.3.2`
-- Nächster sinnvoller Meilenstein: `v0.4.0`
+- Aktuelle Version: `v0.4.0`
+- Nächster sinnvoller Meilenstein: `v0.4.1`
 
 ## Versionierungsmodell
 
@@ -35,6 +35,7 @@ Beispiel:
 - `v0.3.0` = Inhaltsverwaltung beginnt
 - `v0.3.1` = Shortcode-Feinsteuerung für Spalten
 - `v0.3.2` = Einzelspalten-Shortcode
+- `v0.4.0` = Card-Workflow im Backend
 
 ## Roadmap nach Versionen
 
@@ -166,20 +167,23 @@ Offen:
 - ❌ Kurzcode-Generator im Backend fehlt noch
 - ❌ sichtbare Fehlermeldung für unbekannte Themen fehlt noch
 
-### v0.4.0 — Bearbeiten direkt aus der Oberfläche
+### v0.4.0 — Card-Workflow im Backend
 
-Ziel: Eingeloggte Nutzer bekommen die vorgesehenen Bearbeitungsaktionen.
+Ziel: Cards können im Admin-Backend angelegt, bearbeitet und gelöscht werden.
 
 Erledigt:
 
-- ❌ Icons für Löschen, Bearbeiten und Neuer Beitrag definieren
-- ❌ Verlinkung in einen zentralen Editor spezifizieren
+- ✅ Card-Adminseite ergänzt
+- ✅ Card-Submission-Handler ergänzt
+- ✅ Card-Repositories um getById/delete erweitert
+- ✅ Card-Formular mit Kategorie-, Status- und Sichtbarkeitsfeldern ergänzt
+- ✅ Testabdeckung für Card-Speicherung und -Löschung ergänzt
 
 Offen:
 
-- ❌ UI nur für berechtigte Nutzer einblenden
-- ❌ Backend-Zugriff für Redakteure sperren
-- ❌ Admin-Ausnahme sauber abbilden
+- ❌ sichtbare Bearbeitungsaktionen im Frontend noch nicht mit echten Links verbunden
+- ❌ Rechtekonzept für Redakteure noch nicht umgesetzt
+- ❌ Backend-Zugriff für Redakteure noch nicht gesperrt
 
 ### v0.5.0 — Redaktions- und Rechtekonzept
 
@@ -218,9 +222,9 @@ Offen:
 
 Wenn wir weiterarbeiten, wird dieser Block jeweils aktualisiert:
 
-- Version: `v0.3.2`
+- Version: `v0.4.0`
 - Letzte Änderung: 2026-07-13
-- Nächster Fokus: Card-Workflow und Editor für Inhalte
+- Nächster Fokus: Bearbeitungsaktionen im Frontend und Rollenlogik
 
 ## Änderungslog
 
@@ -241,6 +245,12 @@ Wenn wir weiterarbeiten, wird dieser Block jeweils aktualisiert:
 
 - neuer Shortcode `clubcms_column`
 - einzelne Themenkarte direkt einbindbar
+
+### v0.4.0 — Card-Workflow im Backend
+
+- Cards im Backend verwaltbar gemacht
+- Card-Adminseite eingeführt
+- Card-Handler und Tests ergänzt
 
 ### v0.2.3 — Testseite abgesichert
 

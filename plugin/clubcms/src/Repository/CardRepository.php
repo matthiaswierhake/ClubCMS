@@ -33,6 +33,17 @@ final class CardRepository implements CardRepositoryInterface
         ));
     }
 
+    public function getById(string $id): ?Card
+    {
+        foreach ($this->all() as $card) {
+            if ($card->id === $id) {
+                return $card;
+            }
+        }
+
+        return null;
+    }
+
     public function save(Card $card): void
     {
         $items = [];
@@ -44,6 +55,19 @@ final class CardRepository implements CardRepositoryInterface
         }
 
         $items[] = $card->toArray();
+
+        $this->storage->update(self::OPTION_NAME, $items);
+    }
+
+    public function delete(string $id): void
+    {
+        $items = [];
+
+        foreach ($this->all() as $existing) {
+            if ($existing->id !== $id) {
+                $items[] = $existing->toArray();
+            }
+        }
 
         $this->storage->update(self::OPTION_NAME, $items);
     }

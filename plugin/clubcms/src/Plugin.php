@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace ClubCMS;
 
 use ClubCMS\Admin\Dashboard;
+use ClubCMS\Admin\CardSubmissionHandler;
+use ClubCMS\Admin\CardsPage;
 use ClubCMS\Admin\DiagnosticsPage;
 use ClubCMS\Admin\SettingsPage;
 use ClubCMS\Admin\SettingsSubmissionHandler;
@@ -17,6 +19,8 @@ use ClubCMS\Repository\FieldDefinitionRepository;
 final class Plugin
 {
     private Dashboard $dashboard;
+
+    private CardsPage $cardsPage;
 
     private SettingsPage $settingsPage;
 
@@ -31,8 +35,10 @@ final class Plugin
         $cardRepository = new CardRepository($storage);
         $fieldDefinitionRepository = new FieldDefinitionRepository($storage);
         $submissionHandler = new SettingsSubmissionHandler($categoryRepository, $fieldDefinitionRepository);
+        $cardSubmissionHandler = new CardSubmissionHandler($cardRepository);
 
         $this->dashboard = new Dashboard($categoryRepository, $fieldDefinitionRepository);
+        $this->cardsPage = new CardsPage($cardRepository, $categoryRepository, $cardSubmissionHandler);
         $this->settingsPage = new SettingsPage($categoryRepository, $fieldDefinitionRepository, $submissionHandler);
         $this->diagnosticsPage = new DiagnosticsPage();
         $this->landingPageShortcode = new LandingPageShortcode($categoryRepository, $cardRepository);
@@ -57,6 +63,15 @@ final class Plugin
             [$this->dashboard, 'render'],
             'dashicons-screenoptions',
             26
+        );
+
+        add_submenu_page(
+            'clubcms',
+            'Cards',
+            'Cards',
+            'manage_options',
+            'clubcms-cards',
+            [$this->cardsPage, 'render']
         );
 
         add_submenu_page(

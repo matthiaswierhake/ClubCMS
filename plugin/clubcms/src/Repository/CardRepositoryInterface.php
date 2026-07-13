@@ -13,5 +13,9 @@ interface CardRepositoryInterface
      */
     public function all(): array;
 
+    public function getById(string $id): ?Card;
+
     public function save(Card $card): void;
+
+    public function delete(string $id): void;
 }
