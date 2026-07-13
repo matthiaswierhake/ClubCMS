@@ -13,7 +13,7 @@ Dieses Dokument ist bewusst so aufgebaut, dass wir es laufend erweitern können:
 ## Aktueller Stand
 
 - Projektstatus: Inhaltsverwaltung begonnen
-- Aktuelle Version: `v0.4.1`
+- Aktuelle Version: `v0.4.2`
 - Nächster sinnvoller Meilenstein: `v0.5.0`
 
 ## Versionierungsmodell
@@ -37,6 +37,7 @@ Beispiel:
 - `v0.3.2` = Einzelspalten-Shortcode
 - `v0.4.0` = Card-Workflow im Backend
 - `v0.4.1` = Frontend-Aktionen für Cards verbunden
+- `v0.4.2` = Backend-Lockdown für Nicht-Admins
 
 ## Roadmap nach Versionen
 
@@ -201,6 +202,21 @@ Offen:
 - ❌ Redakteursrechte und zentraler Editor noch nicht umgesetzt
 - ❌ Backend-Zugriff für Redakteure noch nicht gesperrt
 
+### v0.4.2 — Backend gesperrt
+
+Ziel: Nicht-Admins werden aus dem WordPress-Backend ferngehalten.
+
+Erledigt:
+
+- ✅ Admin-Access-Guard ergänzt
+- ✅ Non-Admin-Zugriffe auf wp-admin werden umgeleitet
+- ✅ Ajax- und Admin-Post-Pfade bleiben nutzbar
+- ✅ Testabdeckung für Redirect und Bypass ergänzt
+
+Offen:
+
+- ❌ Rollenmodell für Redakteure und zentralen Editor noch nicht finalisiert
+
 ### v0.5.0 — Redaktions- und Rechtekonzept
 
 Ziel: Das Produkt ist im redaktionellen Alltag kontrolliert nutzbar.
@@ -238,9 +254,9 @@ Offen:
 
 Wenn wir weiterarbeiten, wird dieser Block jeweils aktualisiert:
 
-- Version: `v0.4.1`
+- Version: `v0.4.2`
 - Letzte Änderung: 2026-07-13
-- Nächster Fokus: Rollenlogik und Backend-Sperre für Redakteure
+- Nächster Fokus: Rollenmodell und zentraler Editor für Redakteure
 
 ## Änderungslog
 
@@ -272,6 +288,11 @@ Wenn wir weiterarbeiten, wird dieser Block jeweils aktualisiert:
 
 - Frontend-Icons auf Cards an die Card-Verwaltung angebunden
 - New/Edit/Delete-Linklogik ergänzt
+
+### v0.4.2 — Backend gesperrt
+
+- Admin-Access-Guard eingeführt
+- Nicht-Admins werden aus wp-admin umgeleitet
 
 ### v0.2.3 — Testseite abgesichert
 

@@ -102,6 +102,13 @@ if (! function_exists('is_user_logged_in')) {
     }
 }
 
+if (! function_exists('home_url')) {
+    function home_url($path = '', $scheme = null)
+    {
+        return (string) $path;
+    }
+}
+
 if (! function_exists('load_plugin_textdomain')) {
     function load_plugin_textdomain($domain, $deprecated = false, $plugin_rel_path = false)
     {
