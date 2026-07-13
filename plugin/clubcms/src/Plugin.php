@@ -7,6 +7,7 @@ namespace ClubCMS;
 use ClubCMS\Admin\Dashboard;
 use ClubCMS\Admin\DiagnosticsPage;
 use ClubCMS\Admin\SettingsPage;
+use ClubCMS\Admin\SettingsSubmissionHandler;
 use ClubCMS\Infrastructure\OptionStorage;
 use ClubCMS\Repository\CategoryRepository;
 use ClubCMS\Repository\FieldDefinitionRepository;
@@ -24,9 +25,10 @@ final class Plugin
         $storage = new OptionStorage();
         $categoryRepository = new CategoryRepository($storage);
         $fieldDefinitionRepository = new FieldDefinitionRepository($storage);
+        $submissionHandler = new SettingsSubmissionHandler($categoryRepository, $fieldDefinitionRepository);
 
         $this->dashboard = new Dashboard($categoryRepository, $fieldDefinitionRepository);
-        $this->settingsPage = new SettingsPage($categoryRepository, $fieldDefinitionRepository);
+        $this->settingsPage = new SettingsPage($categoryRepository, $fieldDefinitionRepository, $submissionHandler);
         $this->diagnosticsPage = new DiagnosticsPage();
 
         add_action('init', [$this, 'registerTextDomain']);

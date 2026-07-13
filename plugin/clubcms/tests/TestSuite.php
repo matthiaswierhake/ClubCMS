@@ -45,6 +45,7 @@ final class TestSuite
         return [
             FieldDefinitionTest::class,
             CategoryTest::class,
+            SettingsSubmissionHandlerTest::class,
         ];
     }
 }

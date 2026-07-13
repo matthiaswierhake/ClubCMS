@@ -6,14 +6,15 @@ namespace ClubCMS\Admin;
 
 use ClubCMS\Domain\Category;
 use ClubCMS\Domain\FieldDefinition;
-use ClubCMS\Repository\CategoryRepository;
-use ClubCMS\Repository\FieldDefinitionRepository;
+use ClubCMS\Repository\CategoryRepositoryInterface;
+use ClubCMS\Repository\FieldDefinitionRepositoryInterface;
 
 final class SettingsPage
 {
     public function __construct(
-        private readonly CategoryRepository $categoryRepository,
-        private readonly FieldDefinitionRepository $fieldDefinitionRepository,
+        private readonly CategoryRepositoryInterface $categoryRepository,
+        private readonly FieldDefinitionRepositoryInterface $fieldDefinitionRepository,
+        private readonly SettingsSubmissionHandler $submissionHandler,
     ) {
     }
 
@@ -34,6 +35,7 @@ final class SettingsPage
 
         echo '<div class="wrap">';
         echo '<h1>Felddefinitionen</h1>';
+        echo $this->renderFieldDefinitionNotice();
         echo $this->renderFieldDefinitionForm();
         echo $this->renderFieldDefinitionList();
         echo '</div>';
@@ -51,19 +53,9 @@ final class SettingsPage
             wp_die('Insufficient permissions.');
         }
 
-        $id = sanitize_key((string) ($_POST['id'] ?? ''));
-        $label = sanitize_text_field((string) ($_POST['label'] ?? ''));
-        $slug = sanitize_title((string) ($_POST['slug'] ?? ''));
-        $sortMode = sanitize_key((string) ($_POST['sort_mode'] ?? 'date'));
-        $fieldDefinitionIds = $this->normalizeIdList((string) ($_POST['field_definition_ids'] ?? ''));
-
-        if ($id === '' || $label === '' || $slug === '') {
+        if (! $this->submissionHandler->handleCategory($_POST)) {
             return;
         }
-
-        $this->categoryRepository->save(
-            new Category($id, $label, $slug, $sortMode, $fieldDefinitionIds)
-        );
 
         wp_safe_redirect(add_query_arg(['page' => 'clubcms-categories', 'saved' => '1'], admin_url('admin.php')));
         exit;
@@ -81,22 +73,9 @@ final class SettingsPage
             wp_die('Insufficient permissions.');
         }
 
-        $id = sanitize_key((string) ($_POST['id'] ?? ''));
-        $label = sanitize_text_field((string) ($_POST['label'] ?? ''));
-        $json = (string) ($_POST['fields_json'] ?? '[]');
-        $fields = json_decode($json, true);
-
-        if (! is_array($fields)) {
-            $fields = [];
-        }
-
-        if ($id === '' || $label === '') {
+        if (! $this->submissionHandler->handleFieldDefinition($_POST)) {
             return;
         }
-
-        $this->fieldDefinitionRepository->save(
-            new FieldDefinition($id, $label, $fields)
-        );
 
         wp_safe_redirect(add_query_arg(['page' => 'clubcms-field-definitions', 'saved' => '1'], admin_url('admin.php')));
         exit;
@@ -169,6 +148,17 @@ final class SettingsPage
         return (string) ob_get_clean();
     }
 
+    private function renderFieldDefinitionNotice(): string
+    {
+        $error = $this->submissionHandler->getLastError();
+
+        if ($error === null) {
+            return '';
+        }
+
+        return '<div class="notice notice-error is-dismissible"><p>' . esc_html($error) . '</p></div>';
+    }
+
     private function renderCategoryList(): string
     {
         $items = $this->categoryRepository->all();
@@ -227,14 +217,4 @@ final class SettingsPage
         return (string) ob_get_clean();
     }
 
-    /**
-     * @return array<int, string>
-     */
-    private function normalizeIdList(string $value): array
-    {
-        $parts = preg_split('/\s*,\s*/', trim($value)) ?: [];
-        $parts = array_map('sanitize_key', $parts);
-
-        return array_values(array_filter($parts, static fn (string $item): bool => $item !== ''));
-    }
 }

@@ -7,7 +7,7 @@ namespace ClubCMS\Repository;
 use ClubCMS\Domain\FieldDefinition;
 use ClubCMS\Infrastructure\OptionStorage;
 
-final class FieldDefinitionRepository
+final class FieldDefinitionRepository implements FieldDefinitionRepositoryInterface
 {
     private const OPTION_NAME = 'field_definitions';
 

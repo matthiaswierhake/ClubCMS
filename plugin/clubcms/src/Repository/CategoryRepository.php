@@ -7,7 +7,7 @@ namespace ClubCMS\Repository;
 use ClubCMS\Domain\Category;
 use ClubCMS\Infrastructure\OptionStorage;
 
-final class CategoryRepository
+final class CategoryRepository implements CategoryRepositoryInterface
 {
     private const OPTION_NAME = 'categories';
 

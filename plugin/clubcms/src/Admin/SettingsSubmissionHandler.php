@@ -1,0 +1,135 @@
+<?php
+
+declare(strict_types=1);
+
+namespace ClubCMS\Admin;
+
+use ClubCMS\Domain\Category;
+use ClubCMS\Domain\FieldDefinition;
+use ClubCMS\Repository\CategoryRepositoryInterface;
+use ClubCMS\Repository\FieldDefinitionRepositoryInterface;
+
+final class SettingsSubmissionHandler
+{
+    private ?string $lastError = null;
+
+    public function __construct(
+        private readonly CategoryRepositoryInterface $categoryRepository,
+        private readonly FieldDefinitionRepositoryInterface $fieldDefinitionRepository,
+    ) {
+    }
+
+    public function getLastError(): ?string
+    {
+        return $this->lastError;
+    }
+
+    /**
+     * @param array<string, mixed> $post
+     */
+    public function handleCategory(array $post): bool
+    {
+        $this->lastError = null;
+
+        $id = $this->sanitizeKey((string) ($post['id'] ?? ''));
+        $label = $this->sanitizeText((string) ($post['label'] ?? ''));
+        $slug = $this->sanitizeTitle((string) ($post['slug'] ?? ''));
+        $sortMode = $this->sanitizeKey((string) ($post['sort_mode'] ?? 'date'));
+        $fieldDefinitionIds = $this->normalizeIdList((string) ($post['field_definition_ids'] ?? ''));
+
+        if ($id === '' || $label === '' || $slug === '') {
+            return false;
+        }
+
+        $this->categoryRepository->save(
+            new Category($id, $label, $slug, $sortMode, $fieldDefinitionIds)
+        );
+
+        return true;
+    }
+
+    /**
+     * @param array<string, mixed> $post
+     */
+    public function handleFieldDefinition(array $post): bool
+    {
+        $this->lastError = null;
+
+        $id = $this->sanitizeKey((string) ($post['id'] ?? ''));
+        $label = $this->sanitizeText((string) ($post['label'] ?? ''));
+        $json = (string) ($post['fields_json'] ?? '[]');
+
+        try {
+            $fields = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $exception) {
+            $this->lastError = 'Die Felddefinition enthält ungültiges JSON.';
+
+            return false;
+        }
+
+        if ($id === '' || $label === '') {
+            $this->lastError = 'ID und Bezeichnung sind erforderlich.';
+
+            return false;
+        }
+
+        if (! is_array($fields)) {
+            $this->lastError = 'Felder müssen als JSON-Array angegeben werden.';
+
+            return false;
+        }
+
+        $this->fieldDefinitionRepository->save(
+            new FieldDefinition($id, $label, $fields)
+        );
+
+        return true;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function normalizeIdList(string $value): array
+    {
+        $parts = preg_split('/\s*,\s*/', trim($value)) ?: [];
+        $parts = array_map(fn (string $item): string => $this->sanitizeKey($item), $parts);
+
+        return array_values(array_filter($parts, static fn (string $item): bool => $item !== ''));
+    }
+
+    private function sanitizeKey(string $value): string
+    {
+        if (function_exists('sanitize_key')) {
+            return (string) sanitize_key($value);
+        }
+
+        $value = strtolower($value);
+        $value = preg_replace('/[^a-z0-9_-]/', '', $value) ?? '';
+
+        return trim($value, "_-");
+    }
+
+    private function sanitizeText(string $value): string
+    {
+        if (function_exists('sanitize_text_field')) {
+            return (string) sanitize_text_field($value);
+        }
+
+        $value = strip_tags($value);
+        $value = preg_replace('/[\r\n\t ]+/', ' ', $value) ?? $value;
+
+        return trim($value);
+    }
+
+    private function sanitizeTitle(string $value): string
+    {
+        if (function_exists('sanitize_title')) {
+            return (string) sanitize_title($value);
+        }
+
+        $value = strtolower($value);
+        $value = preg_replace('/[^a-z0-9]+/', '-', $value) ?? '';
+
+        return trim($value, '-');
+    }
+}
