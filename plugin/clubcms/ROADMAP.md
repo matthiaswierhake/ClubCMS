@@ -13,7 +13,7 @@ Dieses Dokument ist bewusst so aufgebaut, dass wir es laufend erweitern können:
 ## Aktueller Stand
 
 - Projektstatus: Inhaltsverwaltung begonnen
-- Aktuelle Version: `v0.3.0`
+- Aktuelle Version: `v0.3.1`
 - Nächster sinnvoller Meilenstein: `v0.4.0`
 
 ## Versionierungsmodell
@@ -33,6 +33,7 @@ Beispiel:
 - `v0.2.2` = Wartung und Tooling-Verbesserungen
 - `v0.2.3` = Bugfixes und Robustheit
 - `v0.3.0` = Inhaltsverwaltung beginnt
+- `v0.3.1` = Shortcode-Feinsteuerung für Spalten
 
 ## Roadmap nach Versionen
 
@@ -132,6 +133,22 @@ Offen:
 - ❌ Initiale Beitragslogik für Cards
 - ❌ Datenmodell für Beiträge und Kategorien konsolidieren
 
+### v0.3.1 — Spaltenzuordnung per Shortcode
+
+Ziel: Die Themen in den 4 Spalten können im Shortcode direkt festgelegt werden.
+
+Erledigt:
+
+- ✅ Shortcode nimmt explizite Spaltenzuordnung an
+- ✅ nicht gesetzte Spalten füllen sich automatisch mit verbleibenden Kategorien
+- ✅ Shortcode-Dokumentation ergänzt
+- ✅ Test für die Spaltenzuordnung ergänzt
+
+Offen:
+
+- ❌ Auswahl im Backend-Editor noch nicht vorhanden
+- ❌ Validierung nicht vorhandener Kategorien im Frontend sichtbarer machen
+
 ### v0.4.0 — Bearbeiten direkt aus der Oberfläche
 
 Ziel: Eingeloggte Nutzer bekommen die vorgesehenen Bearbeitungsaktionen.
@@ -184,9 +201,9 @@ Offen:
 
 Wenn wir weiterarbeiten, wird dieser Block jeweils aktualisiert:
 
-- Version: `v0.3.0`
+- Version: `v0.3.1`
 - Letzte Änderung: 2026-07-13
-- Nächster Fokus: Zuordnung von Inhalten zu Spalten und Card-Workflow
+- Nächster Fokus: Card-Workflow und Editor für Inhalte
 
 ## Änderungslog
 
@@ -196,6 +213,12 @@ Wenn wir weiterarbeiten, wird dieser Block jeweils aktualisiert:
 - Bearbeiten und Löschen für Kategorien und Felddefinitionen ergänzt
 - Repositories um CRUD-Methoden erweitert
 - Submission-Handler auf Update/Delete vorbereitet
+
+### v0.3.1 — Spaltenzuordnung per Shortcode
+
+- Shortcode um `spalte_1` bis `spalte_4` erweitert
+- README um Beispiel ergänzt
+- Landingpage-Shortcode-Test ergänzt
 
 ### v0.2.3 — Testseite abgesichert
 
@@ -230,4 +253,3 @@ Wenn wir weiterarbeiten, wird dieser Block jeweils aktualisiert:
 - Medienverwaltung pro Card
 - automatische Startseiten-Teaser aus Kategorien
 - Protokollierung von Änderungen
-

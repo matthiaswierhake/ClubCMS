@@ -62,6 +62,18 @@ Per Shortcode werden Themen den Spalten zugeordnet.
 
 Damit kann die Startseite oder ein Bereich der Seite flexibel gesteuert werden, ohne das Layout hart zu verdrahten.
 
+Beispiel:
+
+```text
+[clubcms_landing_page spalte_1="cat-events" spalte_2="cat-news" spalte_3="cat-verein" spalte_4="cat-kontakt"]
+```
+
+Wichtig:
+
+- Die Werte sind Kategorienamen oder Slugs aus ClubCMS.
+- Nicht gesetzte Spalten werden automatisch mit den übrigen Kategorien gefüllt.
+- Wenn eine Spalte bewusst leer bleiben soll, kann dort kein Wert gesetzt werden.
+
 ## Projektfortschritt und Roadmap
 
 Der aktuelle Fortschritt, die Versionierung und die nächsten Schritte sind in der Roadmap dokumentiert:
@@ -90,4 +102,3 @@ Aus heutiger Sicht ist der nächste Schritt:
 Wenn neue Anforderungen dazukommen, werden sie zuerst in der Roadmap ergänzt.
 
 Die README bleibt die kompakte Projekteinführung, die Roadmap der laufende Arbeitsstand.
-

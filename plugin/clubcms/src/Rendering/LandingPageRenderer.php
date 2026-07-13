@@ -10,7 +10,7 @@ use ClubCMS\Domain\Category;
 final class LandingPageRenderer
 {
     /**
-     * @param array<int, Category> $categories
+     * @param array<int, Category|null> $categories
      * @param array<int, Card> $cards
      */
     public function render(array $categories, array $cards = [], bool $showEditorControls = false): string
@@ -81,7 +81,7 @@ final class LandingPageRenderer
     }
 
     /**
-     * @param array<int, Category> $categories
+     * @param array<int, Category|null> $categories
      * @param array<int, Card> $cards
      * @return array<int, array{title: string, kicker: string, status: string, items: array<int, array{title: string, meta: string}>}>
      */

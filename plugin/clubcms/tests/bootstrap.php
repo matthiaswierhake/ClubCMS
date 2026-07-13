@@ -20,3 +20,4 @@ require_once __DIR__ . '/CategoryTest.php';
 require_once __DIR__ . '/CardTest.php';
 require_once __DIR__ . '/SettingsSubmissionHandlerTest.php';
 require_once __DIR__ . '/LandingPageRendererTest.php';
+require_once __DIR__ . '/LandingPageShortcodeTest.php';

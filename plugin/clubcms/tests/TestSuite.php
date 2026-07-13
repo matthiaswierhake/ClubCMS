@@ -72,6 +72,7 @@ final class TestSuite
             CardTest::class,
             SettingsSubmissionHandlerTest::class,
             LandingPageRendererTest::class,
+            LandingPageShortcodeTest::class,
         ];
     }
 }
