@@ -1,3 +1,18 @@
-# CluCMS
-
-ClubCMS
+{
+  "name": "wpclubcms/clubcms",
+  "description": "ClubCMS WordPress plugin",
+  "type": "wordpress-plugin",
+  "require": {
+    "php": ">=8.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "ClubCMS\\": "src/"
+    }
+  },
+  "config": {
+    "sort-packages": true
+  },
+  "minimum-stability": "stable",
+  "license": "proprietary"
+}
