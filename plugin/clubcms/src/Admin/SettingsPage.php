@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace ClubCMS\Admin;
 
-use ClubCMS\Domain\Category;
-use ClubCMS\Domain\FieldDefinition;
 use ClubCMS\Repository\CategoryRepositoryInterface;
 use ClubCMS\Repository\FieldDefinitionRepositoryInterface;
 
