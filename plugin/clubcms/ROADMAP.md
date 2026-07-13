@@ -13,8 +13,8 @@ Dieses Dokument ist bewusst so aufgebaut, dass wir es laufend erweitern können:
 ## Aktueller Stand
 
 - Projektstatus: Inhaltsverwaltung begonnen
-- Aktuelle Version: `v0.4.0`
-- Nächster sinnvoller Meilenstein: `v0.4.1`
+- Aktuelle Version: `v0.4.1`
+- Nächster sinnvoller Meilenstein: `v0.5.0`
 
 ## Versionierungsmodell
 
@@ -36,6 +36,7 @@ Beispiel:
 - `v0.3.1` = Shortcode-Feinsteuerung für Spalten
 - `v0.3.2` = Einzelspalten-Shortcode
 - `v0.4.0` = Card-Workflow im Backend
+- `v0.4.1` = Frontend-Aktionen für Cards verbunden
 
 ## Roadmap nach Versionen
 
@@ -181,8 +182,23 @@ Erledigt:
 
 Offen:
 
-- ❌ sichtbare Bearbeitungsaktionen im Frontend noch nicht mit echten Links verbunden
 - ❌ Rechtekonzept für Redakteure noch nicht umgesetzt
+- ❌ Backend-Zugriff für Redakteure noch nicht gesperrt
+
+### v0.4.1 — Frontend-Aktionen verbunden
+
+Ziel: Die im Frontend sichtbaren Aktionen führen zu den Card-Editorseiten.
+
+Erledigt:
+
+- ✅ Neuer-Beitrag-Link pro Themenkarte ergänzt
+- ✅ Bearbeiten-Link pro Card ergänzt
+- ✅ Löschen per Frontend-Formular an den Card-Editor angebunden
+- ✅ Kategorie kann beim neuen Card-Entwurf vorgewählt werden
+
+Offen:
+
+- ❌ Redakteursrechte und zentraler Editor noch nicht umgesetzt
 - ❌ Backend-Zugriff für Redakteure noch nicht gesperrt
 
 ### v0.5.0 — Redaktions- und Rechtekonzept
@@ -222,9 +238,9 @@ Offen:
 
 Wenn wir weiterarbeiten, wird dieser Block jeweils aktualisiert:
 
-- Version: `v0.4.0`
+- Version: `v0.4.1`
 - Letzte Änderung: 2026-07-13
-- Nächster Fokus: Bearbeitungsaktionen im Frontend und Rollenlogik
+- Nächster Fokus: Rollenlogik und Backend-Sperre für Redakteure
 
 ## Änderungslog
 
@@ -251,6 +267,11 @@ Wenn wir weiterarbeiten, wird dieser Block jeweils aktualisiert:
 - Cards im Backend verwaltbar gemacht
 - Card-Adminseite eingeführt
 - Card-Handler und Tests ergänzt
+
+### v0.4.1 — Frontend-Aktionen verbunden
+
+- Frontend-Icons auf Cards an die Card-Verwaltung angebunden
+- New/Edit/Delete-Linklogik ergänzt
 
 ### v0.2.3 — Testseite abgesichert
 

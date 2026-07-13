@@ -29,7 +29,7 @@ final class LandingPageRendererTest
         ], [
             new Card('card-1', 'Sommerlager startet', 'cat-news', [], CardStatus::Published, publishedAt: new DateTimeImmutable('2026-07-10 12:00:00', new DateTimeZone('UTC'))),
             new Card('card-2', 'Vereinsmeisterschaft', 'cat-events', [], CardStatus::Draft, position: 2),
-        ]);
+        ], true);
 
         $this->assertContains('clubcms-landing-page', $html, 'The landing page wrapper should be rendered.');
         $this->assertContains('clubcms-hero__title', $html, 'The hero section should be rendered.');
@@ -40,12 +40,19 @@ final class LandingPageRendererTest
         $this->assertContains('Noch keine Beiträge vorhanden.', $html, 'Empty cards should render a placeholder message.');
         $this->assertContains('Sommerlager startet', $html, 'Cards should be rendered inside their category.');
         $this->assertContains('Vereinsmeisterschaft', $html, 'Second card should be rendered.');
+        $this->assertContains('page=clubcms-cards', $html, 'Frontend actions should link to the Cards admin page.');
+        $this->assertContains('edit_card=card-1', $html, 'Edit action should target the matching card.');
+        $this->assertContains('category_id=cat-news', $html, 'New-card action should prefill the category.');
     }
 
     private function itAddsEditorControlsForLoggedInUsers(): void
     {
         $renderer = new LandingPageRenderer();
-        $html = $renderer->render([], [], true);
+        $html = $renderer->render([
+            new Category('cat-news', 'News', 'news', 'date'),
+        ], [
+            new Card('card-1', 'Sommerlager startet', 'cat-news', [], CardStatus::Published, publishedAt: new DateTimeImmutable('2026-07-10 12:00:00', new DateTimeZone('UTC'))),
+        ], true);
 
         $this->assertContains('Bearbeitungsaktionen', $html, 'Editor controls should be rendered for logged-in users.');
         $this->assertContains('Neuer Beitrag', $html, 'Editor controls should contain a new-post action.');

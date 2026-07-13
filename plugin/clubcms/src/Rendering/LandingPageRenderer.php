@@ -69,7 +69,7 @@ final class LandingPageRenderer
     /**
      * @param array<int, Category|null> $categories
      * @param array<int, Card> $cards
-     * @return array<int, array{title: string, kicker: string, status: string, items: array<int, array{title: string, meta: string}>}>
+     * @return array<int, array{title: string, kicker: string, status: string, categoryId: string, items: array<int, array{id: string, title: string, meta: string}>}>
      */
     private function buildColumns(array $categories, array $cards): array
     {
@@ -85,7 +85,7 @@ final class LandingPageRenderer
 
     /**
      * @param array<int, Card> $cards
-     * @return array{title: string, kicker: string, status: string, items: array<int, array{title: string, meta: string}>}
+     * @return array{title: string, kicker: string, status: string, categoryId: string, items: array<int, array{id: string, title: string, meta: string}>}
      */
     private function buildColumn(?Category $category, array $cards, int $fallbackIndex = 1): array
     {
@@ -101,13 +101,14 @@ final class LandingPageRenderer
             'status' => $category === null
                 ? $fallback['status']
                 : sprintf('Kategorie: %s', $category->sortMode),
+            'categoryId' => $category?->id ?? '',
             'items' => $this->buildItemsForCategory($category, $cards),
         ];
     }
 
     /**
      * @param array<int, Card> $cards
-     * @return array<int, array{title: string, meta: string}>
+     * @return array<int, array{id: string, title: string, meta: string}>
      */
     private function buildItemsForCategory(?Category $category, array $cards): array
     {
@@ -133,6 +134,7 @@ final class LandingPageRenderer
         return array_map(
             function (Card $card): array {
                 return [
+                    'id' => $card->id,
                     'title' => $card->title,
                     'meta' => $this->buildCardMeta($card),
                 ];
@@ -165,7 +167,7 @@ final class LandingPageRenderer
     }
 
     /**
-     * @param array{title: string, kicker: string, status: string, items: array<int, array{title: string, meta: string}>} $column
+     * @param array{title: string, kicker: string, status: string, categoryId: string, items: array<int, array{id: string, title: string, meta: string}>} $column
      */
     private function renderColumnCard(array $column, bool $showEditorControls): string
     {
@@ -180,9 +182,9 @@ final class LandingPageRenderer
 
                 <?php if ($showEditorControls): ?>
                     <div class="clubcms-card__actions" aria-label="Bearbeitungsaktionen">
-                        <a href="#" aria-label="Neuer Beitrag">＋</a>
-                        <a href="#" aria-label="Bearbeiten">✎</a>
-                        <a href="#" aria-label="Löschen">🗑</a>
+                        <?php if ($column['categoryId'] !== ''): ?>
+                            <a href="<?php echo $this->escapeAttr($this->buildNewCardUrl($column['categoryId'])); ?>" aria-label="Neuer Beitrag"><span class="screen-reader-text">Neuer Beitrag</span>＋</a>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
             </header>
@@ -196,6 +198,18 @@ final class LandingPageRenderer
                             <li>
                                 <strong><?php echo $this->escapeHtml($item['title']); ?></strong>
                                 <span><?php echo $this->escapeHtml($item['meta']); ?></span>
+                                <?php if ($showEditorControls): ?>
+                                    <span class="clubcms-card__item-actions">
+                                        <a href="<?php echo $this->escapeAttr($this->buildEditCardUrl($item['id'])); ?>" aria-label="Bearbeiten"><span class="screen-reader-text">Bearbeiten</span>✎</a>
+                                        <form method="post" action="<?php echo $this->escapeAttr($this->buildCardsAdminUrl()); ?>" style="display:inline;">
+                                            <?php echo $this->renderDeleteNonceField(); ?>
+                                            <input type="hidden" name="clubcms_form" value="card" />
+                                            <input type="hidden" name="clubcms_action" value="delete" />
+                                            <input type="hidden" name="id" value="<?php echo $this->escapeAttr($item['id']); ?>" />
+                                            <button type="submit" aria-label="Löschen"><span class="screen-reader-text">Löschen</span>🗑</button>
+                                        </form>
+                                    </span>
+                                <?php endif; ?>
                             </li>
                         <?php endforeach; ?>
                     </ul>
@@ -209,10 +223,64 @@ final class LandingPageRenderer
         return (string) ob_get_clean();
     }
 
+    private function buildCardsAdminUrl(): string
+    {
+        if (function_exists('admin_url')) {
+            return (string) add_query_arg(['page' => 'clubcms-cards'], admin_url('admin.php'));
+        }
+
+        return '';
+    }
+
+    private function buildEditCardUrl(string $id): string
+    {
+        if (function_exists('admin_url')) {
+            return (string) add_query_arg([
+                'page' => 'clubcms-cards',
+                'edit_card' => $id,
+            ], admin_url('admin.php'));
+        }
+
+        return '';
+    }
+
+    private function buildNewCardUrl(string $categoryId): string
+    {
+        if (function_exists('admin_url')) {
+            return (string) add_query_arg([
+                'page' => 'clubcms-cards',
+                'category_id' => $categoryId,
+            ], admin_url('admin.php'));
+        }
+
+        return '';
+    }
+
+    private function renderDeleteNonceField(): string
+    {
+        if (! function_exists('wp_nonce_field')) {
+            return '';
+        }
+
+        ob_start();
+        wp_nonce_field('clubcms_save_card');
+
+        return (string) ob_get_clean();
+    }
+
     private function escapeHtml(string $value): string
     {
         if (function_exists('esc_html')) {
             return (string) esc_html($value);
+        }
+
+        return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+
+    private function escapeAttr(string $value): string
+    {
+        if (function_exists('esc_attr')) {
+            return (string) esc_attr($value);
         }
 
         return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');

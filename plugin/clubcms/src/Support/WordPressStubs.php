@@ -36,7 +36,13 @@ if (! function_exists('add_submenu_page')) {
 if (! function_exists('add_query_arg')) {
     function add_query_arg($args, $url = '')
     {
-        return $url;
+        if (! is_array($args) || $args === []) {
+            return (string) $url;
+        }
+
+        $separator = str_contains((string) $url, '?') ? '&' : '?';
+
+        return (string) $url . $separator . http_build_query($args);
     }
 }
 
@@ -188,4 +194,3 @@ if (! function_exists('wp_safe_redirect')) {
         return true;
     }
 }
-

@@ -73,6 +73,17 @@ final class CardsPage
         return $this->cardRepository->getById($id);
     }
 
+    private function getPresetCategoryId(): string
+    {
+        $categoryId = (string) ($_GET['category_id'] ?? '');
+
+        if ($categoryId === '') {
+            return '';
+        }
+
+        return $categoryId;
+    }
+
     private function renderStatusNotice(): string
     {
         if (! isset($_GET['saved']) && ! isset($_GET['deleted'])) {
@@ -86,7 +97,8 @@ final class CardsPage
 
     private function renderForm(?Card $editingCard): string
     {
-        $card = $editingCard ?? new Card('', '', '', [], publishedAt: null);
+        $presetCategoryId = $this->getPresetCategoryId();
+        $card = $editingCard ?? new Card('', '', $presetCategoryId, [], publishedAt: null);
         $isEditMode = $editingCard !== null;
 
         $categories = $this->categoryRepository->all();
