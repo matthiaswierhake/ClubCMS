@@ -53,6 +53,7 @@ final class Plugin
 
         add_action('init', [$this, 'registerTextDomain']);
         add_action('init', [$this->landingPageShortcode, 'register']);
+        add_action('init', [$this, 'hideAdminBar']);
         add_action('admin_init', [$this->adminAccessGuard, 'enforce']);
         add_filter('show_admin_bar', [$this->adminBarGuard, 'filter']);
         add_action('admin_menu', [$this, 'registerAdminMenu']);
@@ -61,6 +62,13 @@ final class Plugin
     public function registerTextDomain(): void
     {
         load_plugin_textdomain('clubcms', false, dirname(plugin_basename(CLUBCMS_FILE)) . '/languages');
+    }
+
+    public function hideAdminBar(): void
+    {
+        if (function_exists('show_admin_bar')) {
+            show_admin_bar(false);
+        }
     }
 
     public function registerAdminMenu(): void

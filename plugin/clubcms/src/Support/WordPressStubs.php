@@ -181,6 +181,13 @@ if (! function_exists('submit_button')) {
     }
 }
 
+if (! function_exists('show_admin_bar')) {
+    function show_admin_bar($show = true)
+    {
+        return (bool) $show;
+    }
+}
+
 if (! function_exists('update_option')) {
     function update_option($option, $value, $autoload = null)
     {

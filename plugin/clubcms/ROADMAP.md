@@ -13,7 +13,7 @@ Dieses Dokument ist bewusst so aufgebaut, dass wir es laufend erweitern können:
 ## Aktueller Stand
 
 - Projektstatus: Inhaltsverwaltung begonnen
-- Aktuelle Version: `v0.4.3`
+- Aktuelle Version: `v0.4.4`
 - Nächster sinnvoller Meilenstein: `v0.5.0`
 
 ## Versionierungsmodell
@@ -39,6 +39,7 @@ Beispiel:
 - `v0.4.1` = Frontend-Aktionen für Cards verbunden
 - `v0.4.2` = Backend-Lockdown für Nicht-Admins
 - `v0.4.3` = Admin-Bar für Nicht-Admins ausgeblendet
+- `v0.4.4` = Admin-Bar hart deaktiviert
 
 ## Roadmap nach Versionen
 
@@ -232,6 +233,20 @@ Offen:
 
 - ❌ falls gewünscht: Admin-Bar auch für Admins komplett deaktivieren
 
+### v0.4.4 — Admin-Bar deaktiviert
+
+Ziel: Die WordPress-Zeile oben wird auf der Website nicht mehr angezeigt.
+
+Erledigt:
+
+- ✅ show_admin_bar(false) im Plugin-Init gesetzt
+- ✅ Filter bleibt als zusätzliche Absicherung aktiv
+- ✅ Testabdeckung vereinfacht und abgesichert
+
+Offen:
+
+- ❌ optional: auch andere WordPress-Frontend-Elemente gezielt ausblenden
+
 ### v0.5.0 — Redaktions- und Rechtekonzept
 
 Ziel: Das Produkt ist im redaktionellen Alltag kontrolliert nutzbar.
@@ -269,7 +284,7 @@ Offen:
 
 Wenn wir weiterarbeiten, wird dieser Block jeweils aktualisiert:
 
-- Version: `v0.4.3`
+- Version: `v0.4.4`
 - Letzte Änderung: 2026-07-13
 - Nächster Fokus: Rollenmodell und zentraler Editor für Redakteure
 
@@ -312,6 +327,10 @@ Wenn wir weiterarbeiten, wird dieser Block jeweils aktualisiert:
 ### v0.4.3 — Admin-Bar ausgeblendet
 
 - Admin-Bar für Nicht-Admins verborgen
+
+### v0.4.4 — Admin-Bar deaktiviert
+
+- admin bar auf der Website dauerhaft deaktiviert
 
 ### v0.2.3 — Testseite abgesichert
 
