@@ -72,6 +72,7 @@ final class TestSuite
             CardTest::class,
             CardSubmissionHandlerTest::class,
             AdminAccessGuardTest::class,
+            AdminBarGuardTest::class,
             SettingsSubmissionHandlerTest::class,
             LandingPageRendererTest::class,
             LandingPageShortcodeTest::class,

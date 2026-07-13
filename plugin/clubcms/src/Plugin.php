@@ -15,6 +15,7 @@ use ClubCMS\Infrastructure\OptionStorage;
 use ClubCMS\Repository\CardRepository;
 use ClubCMS\Repository\CategoryRepository;
 use ClubCMS\Repository\FieldDefinitionRepository;
+use ClubCMS\Security\AdminBarGuard;
 use ClubCMS\Security\AdminAccessGuard;
 
 final class Plugin
@@ -31,6 +32,8 @@ final class Plugin
 
     private AdminAccessGuard $adminAccessGuard;
 
+    private AdminBarGuard $adminBarGuard;
+
     public function register(): void
     {
         $storage = new OptionStorage();
@@ -46,10 +49,12 @@ final class Plugin
         $this->diagnosticsPage = new DiagnosticsPage();
         $this->landingPageShortcode = new LandingPageShortcode($categoryRepository, $cardRepository);
         $this->adminAccessGuard = new AdminAccessGuard();
+        $this->adminBarGuard = new AdminBarGuard();
 
         add_action('init', [$this, 'registerTextDomain']);
         add_action('init', [$this->landingPageShortcode, 'register']);
         add_action('admin_init', [$this->adminAccessGuard, 'enforce']);
+        add_filter('show_admin_bar', [$this->adminBarGuard, 'filter']);
         add_action('admin_menu', [$this, 'registerAdminMenu']);
     }
 

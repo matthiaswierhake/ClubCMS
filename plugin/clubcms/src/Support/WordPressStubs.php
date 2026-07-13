@@ -12,6 +12,13 @@ if (! function_exists('add_action')) {
     }
 }
 
+if (! function_exists('add_filter')) {
+    function add_filter($hook_name, $callback, $priority = 10, $accepted_args = 1)
+    {
+        return null;
+    }
+}
+
 if (! function_exists('add_shortcode')) {
     function add_shortcode($tag, $callback)
     {
