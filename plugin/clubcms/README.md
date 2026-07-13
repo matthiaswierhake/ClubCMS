@@ -1,6 +1,6 @@
 # ClubCMS
 
-ClubCMS ist ein WordPress-Plugin für eine strukturierte Vereins- und Inhaltsverwaltung auf Basis des Kadence-Themes.
+ClubCMS ist ein WordPress-Plugin fuer eine strukturierte Vereins- und Inhaltsverwaltung auf Basis des Kadence-Themes.
 
 Die Landingpage orientiert sich an der Vorlage `LandingPage.png` und an der funktionalen Beschreibung aus dieser Datei.
 
@@ -8,53 +8,53 @@ Die Landingpage orientiert sich an der Vorlage `LandingPage.png` und an der funk
 
 Das Plugin soll Vereinsinhalte so darstellen und pflegen, dass:
 
-- die Startseite ein klares, redaktionell steuerbares Layout erhält
+- die Startseite ein klares, redaktionell steuerbares Layout erhaelt
 - Inhalte in thematischen Cards und Spalten organisiert werden
-- eingeloggte Nutzer direkt aus der Oberfläche bearbeiten können
-- Redakteure nicht in das WordPress-Backend müssen
-- Administratoren das Backend weiterhin nutzen können
+- eingeloggte Nutzer direkt aus der Oberflaeche bearbeiten koennen
+- Redakteure nicht in das WordPress-Backend muessen
+- Administratoren das Backend weiterhin nutzen koennen
 - Kategorien und Formularfelder zentral definierbar sind
 
 ## Aufbau der Landingpage
 
-Die gewünschte Struktur ist im Kern:
+Die gewuenschte Struktur ist im Kern:
 
-1. Menü
-2. großes Bild / Hero-Bereich
-3. Teaser-Zeile mit wichtigen Menüpunkten
+1. Menue
+2. grosses Bild / Hero-Bereich
+3. Teaser-Zeile mit wichtigen Menuepunkten
 4. eigentlicher ClubCMS-Inhaltsbereich
 5. Kadence-Zeile mit 4 Spalten
-6. pro Spalte eine Card mit Beiträgen eines Themas oder einer Kategorie
+6. pro Spalte eine Card mit Beitraegen eines Themas oder einer Kategorie
 
-Die Beiträge innerhalb einer Card werden zunächst zeitlich sortiert angezeigt.
+Die Beitraege innerhalb einer Card werden zunaechst zeitlich sortiert angezeigt.
 
 ## Inhaltslogik
 
 - Jede Spalte bildet ein Thema oder eine Kategorie ab.
-- Die Card enthält mehrere Beiträge zu diesem Thema.
-- Die Darstellung erfolgt für nicht eingeloggte Nutzer rein lesend.
-- Für eingeloggte Nutzer werden Bearbeitungsaktionen eingeblendet.
+- Die Card enthaelt mehrere Beitraege zu diesem Thema.
+- Die Darstellung erfolgt fuer nicht eingeloggte Nutzer rein lesend.
+- Fuer eingeloggte Nutzer werden Bearbeitungsaktionen eingeblendet.
 
 Vorgesehene Aktionen:
 
-- Löschen
+- Loeschen
 - Bearbeiten
 - Neuer Beitrag
 
-Diese Aktionen sollen direkt in einen zentralen Editor führen, der von überall aufgerufen werden kann.
+Diese Aktionen koennen direkt in einen zentralen Editor fuehren, der von ueberall aufgerufen werden kann.
 
 ## Rechtekonzept
 
 - Admin: darf das WordPress-Backend nutzen
-- Redakteur: arbeitet über den ClubCMS-Editor, nicht über das Backend
+- Redakteur: arbeitet ueber den ClubCMS-Editor, nicht ueber das Backend
 - eingeloggte Nutzer: sehen je nach Berechtigung die Bearbeitungssymbole
 - nicht eingeloggte Nutzer: sehen nur Inhalte
 
 ## Kategorien und Felder
 
-Es soll einen Editor geben, über den Kategorien und die dazugehörigen Formularfelder definiert werden können.
+Es gibt einen Editor, ueber den Kategorien und die dazugehoerigen Formularfelder definiert werden koennen.
 
-Das Ziel ist, dass Inhalte nicht starr sind, sondern je Thema passend gepflegt werden können.
+Das Ziel ist, dass Inhalte nicht starr sind, sondern je Thema passend gepflegt werden koennen.
 
 ## Kurzcode-Prinzip
 
@@ -71,10 +71,10 @@ Beispiel:
 Wichtig:
 
 - Die Werte sind Kategorienamen oder Slugs aus ClubCMS.
-- Nicht gesetzte Spalten werden automatisch mit den übrigen Kategorien gefüllt.
+- Nicht gesetzte Spalten werden automatisch mit den uebrigen Kategorien gefuellt.
 - Wenn eine Spalte bewusst leer bleiben soll, kann dort kein Wert gesetzt werden.
 
-Wenn du nur eine einzelne Spalte für ein bestimmtes Thema einbinden willst, nutze den Einzel-Shortcode:
+Wenn du nur eine einzelne Spalte fuer ein bestimmtes Thema einbinden willst, nutze den Einzel-Shortcode:
 
 ```text
 [clubcms_column thema="cat-events"]
@@ -82,35 +82,91 @@ Wenn du nur eine einzelne Spalte für ein bestimmtes Thema einbinden willst, nut
 
 Auch hier gilt:
 
-- `thema`, `kategorie`, `category`, `slug` oder `id` können verwendet werden
-- es wird genau eine Card für dieses Thema gerendert
-- das ist sinnvoll für modulare Seiten, Unterseiten oder individuelle Layouts
+- `thema`, `kategorie`, `category`, `slug` oder `id` koennen verwendet werden
+- es wird genau eine Card fuer dieses Thema gerendert
+- das ist sinnvoll fuer modulare Seiten, Unterseiten oder individuelle Layouts
+
+## Zentraler Editor im Frontend
+
+Redakteure sollen nicht ins WordPress-Backend muessen. Dafuer gibt es den zentralen Frontend-Editor:
+
+```text
+[clubcms_editor]
+```
+
+Der Editor zeigt:
+
+- vorhandene Cards
+- Bearbeiten
+- Loeschen
+- neue Cards anlegen
+
+Wichtige Punkte:
+
+- Zugriff haben Redakteure mit `edit_posts` und Administratoren mit `manage_options`
+- das Formular arbeitet direkt im Frontend
+- das Backend bleibt fuer Nicht-Admins gesperrt
+
+Damit die Aktionen auf der Landingpage zum Frontend-Editor fuehren, kann beim Landingpage-Shortcode die Ziel-URL angegeben werden:
+
+```text
+[clubcms_landing_page editor_url="https://example.test/clubcms-editor/"]
+```
+
+Dann zeigen Bearbeiten- und Neu-Links direkt auf die Frontend-Seite mit `[clubcms_editor]`.
+
+## Editor-URL im Backend speichern
+
+Wenn du die Zielseite lieber zentral im Backend pflegen willst, gibt es dafuer den Menüpunkt:
+
+```text
+ClubCMS -> Einstellungen
+```
+
+Dort kannst du die Editor-URL eintragen, zum Beispiel:
+
+```text
+/clubcms-editor/
+```
+
+Oder als volle URL:
+
+```text
+https://example.test/clubcms-editor/
+```
+
+Diese Einstellung wird von der Landingpage automatisch verwendet, solange im Shortcode keine eigene `editor_url` gesetzt ist.
+
+Wenn du von der Landingpage in den Editor gehst, nimmt ClubCMS die Ursprungseite mit und springt nach dem Speichern dorthin zurueck.
+
+Wenn bei der Eingabe etwas nicht passt, zeigt der Editor eine direkte Fehlermeldung im Frontend an.
 
 ## Projektfortschritt und Roadmap
 
-Der aktuelle Fortschritt, die Versionierung und die nächsten Schritte sind in der Roadmap dokumentiert:
+Der aktuelle Fortschritt, die Versionierung und die naechsten Schritte sind in der Roadmap dokumentiert:
 
 - [ROADMAP.md](ROADMAP.md)
 
-Diese Datei ist die zentrale Stelle für:
+Diese Datei ist die zentrale Stelle fuer:
 
 - aktuelle Version
 - Status
 - offene Aufgaben
 - Meilensteine
-- spätere Erweiterungen
+- spaetere Erweiterungen
 
-## Nächster sinnvoller Schritt
+## Naechster sinnvoller Schritt
 
-Aus heutiger Sicht ist der nächste Schritt:
+Aus heutiger Sicht ist der naechste Schritt:
 
-1. Architektur festziehen
-2. Datenmodell definieren
-3. Rollen- und Rechtekonzept präzisieren
-4. erste Grundstruktur für Cards und Shortcodes umsetzen
+1. Feinschliff am Rollenmodell
+2. noch bessere Verknuepfung von Landingpage und Editor
+3. weitere Redaktionswerkzeuge
+4. Sonderfaelle und Validierung erweitern
 
 ## Hinweise zur Pflege
 
-Wenn neue Anforderungen dazukommen, werden sie zuerst in der Roadmap ergänzt.
+Wenn neue Anforderungen dazukommen, werden sie zuerst in der Roadmap ergaenzt.
 
-Die README bleibt die kompakte Projekteinführung, die Roadmap der laufende Arbeitsstand.
+Die README bleibt die kompakte Projekteinfuehrung, die Roadmap der laufende Arbeitsstand.
+

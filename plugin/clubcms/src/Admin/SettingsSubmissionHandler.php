@@ -6,6 +6,7 @@ namespace ClubCMS\Admin;
 
 use ClubCMS\Domain\Category;
 use ClubCMS\Domain\FieldDefinition;
+use ClubCMS\Infrastructure\EditorSettingsStorageInterface;
 use ClubCMS\Repository\CategoryRepositoryInterface;
 use ClubCMS\Repository\FieldDefinitionRepositoryInterface;
 
@@ -16,6 +17,7 @@ final class SettingsSubmissionHandler
     public function __construct(
         private readonly CategoryRepositoryInterface $categoryRepository,
         private readonly FieldDefinitionRepositoryInterface $fieldDefinitionRepository,
+        private readonly ?EditorSettingsStorageInterface $editorSettingsStorage = null,
     ) {
     }
 
@@ -133,6 +135,39 @@ final class SettingsSubmissionHandler
     }
 
     /**
+     * @param array<string, mixed> $post
+     */
+    public function handleEditorSettings(array $post): bool
+    {
+        $this->lastError = null;
+
+        if ($this->editorSettingsStorage === null) {
+            return false;
+        }
+
+        $editorUrl = $this->normalizeEditorUrl((string) ($post['editor_url'] ?? ''));
+
+        if ($editorUrl === null) {
+            $this->lastError = 'Die Editor-URL ist ungültig.';
+
+            return false;
+        }
+
+        $this->editorSettingsStorage->saveEditorUrl($editorUrl);
+
+        return true;
+    }
+
+    public function getEditorUrl(): string
+    {
+        if ($this->editorSettingsStorage === null) {
+            return '';
+        }
+
+        return $this->editorSettingsStorage->getEditorUrl();
+    }
+
+    /**
      * @return array<int, string>
      */
     private function normalizeIdList(string $value): array
@@ -177,5 +212,26 @@ final class SettingsSubmissionHandler
         $value = preg_replace('/[^a-z0-9]+/', '-', $value) ?? '';
 
         return trim($value, '-');
+    }
+
+    private function normalizeEditorUrl(string $value): ?string
+    {
+        $value = trim($value);
+
+        if ($value === '') {
+            return '';
+        }
+
+        if (str_starts_with($value, '/')) {
+            return $value;
+        }
+
+        $scheme = parse_url($value, PHP_URL_SCHEME);
+
+        if (is_string($scheme) && $scheme !== '') {
+            return filter_var($value, FILTER_VALIDATE_URL) ? $value : null;
+        }
+
+        return null;
     }
 }

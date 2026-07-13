@@ -13,7 +13,7 @@ final class LandingPageRenderer
      * @param array<int, Category|null> $categories
      * @param array<int, Card> $cards
      */
-    public function render(array $categories, array $cards = [], bool $showEditorControls = false): string
+    public function render(array $categories, array $cards = [], bool $showEditorControls = false, string $editorUrl = '', string $backToUrl = ''): string
     {
         $columns = $this->buildColumns($categories, $cards);
 
@@ -39,7 +39,7 @@ final class LandingPageRenderer
 
             <section class="clubcms-columns" aria-label="ClubCMS Themenbereiche">
                 <?php foreach ($columns as $column): ?>
-                    <?php echo $this->renderColumnCard($column, $showEditorControls); ?>
+                    <?php echo $this->renderColumnCard($column, $showEditorControls, $editorUrl, $backToUrl); ?>
                 <?php endforeach; ?>
             </section>
         </section>
@@ -52,14 +52,14 @@ final class LandingPageRenderer
      * @param Category|null $category
      * @param array<int, Card> $cards
      */
-    public function renderColumn(?Category $category, array $cards = [], bool $showEditorControls = false): string
+    public function renderColumn(?Category $category, array $cards = [], bool $showEditorControls = false, string $editorUrl = '', string $backToUrl = ''): string
     {
         $column = $this->buildColumn($category, $cards, 1);
 
         ob_start();
         ?>
         <section class="clubcms-columns clubcms-columns--single" aria-label="ClubCMS Themenbereich">
-            <?php echo $this->renderColumnCard($column, $showEditorControls); ?>
+            <?php echo $this->renderColumnCard($column, $showEditorControls, $editorUrl, $backToUrl); ?>
         </section>
         <?php
 
@@ -169,7 +169,7 @@ final class LandingPageRenderer
     /**
      * @param array{title: string, kicker: string, status: string, categoryId: string, items: array<int, array{id: string, title: string, meta: string}>} $column
      */
-    private function renderColumnCard(array $column, bool $showEditorControls): string
+    private function renderColumnCard(array $column, bool $showEditorControls, string $editorUrl = '', string $backToUrl = ''): string
     {
         ob_start();
         ?>
@@ -183,7 +183,7 @@ final class LandingPageRenderer
                 <?php if ($showEditorControls): ?>
                     <div class="clubcms-card__actions" aria-label="Bearbeitungsaktionen">
                         <?php if ($column['categoryId'] !== ''): ?>
-                            <a href="<?php echo $this->escapeAttr($this->buildNewCardUrl($column['categoryId'])); ?>" aria-label="Neuer Beitrag"><span class="screen-reader-text">Neuer Beitrag</span>＋</a>
+                            <a href="<?php echo $this->escapeAttr($this->buildNewCardUrl($column['categoryId'], $editorUrl, $backToUrl)); ?>" aria-label="Neuer Beitrag"><span class="screen-reader-text">Neuer Beitrag</span>＋</a>
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>
@@ -200,8 +200,8 @@ final class LandingPageRenderer
                                 <span><?php echo $this->escapeHtml($item['meta']); ?></span>
                                 <?php if ($showEditorControls): ?>
                                     <span class="clubcms-card__item-actions">
-                                        <a href="<?php echo $this->escapeAttr($this->buildEditCardUrl($item['id'])); ?>" aria-label="Bearbeiten"><span class="screen-reader-text">Bearbeiten</span>✎</a>
-                                        <form method="post" action="<?php echo $this->escapeAttr($this->buildCardsAdminUrl()); ?>" style="display:inline;">
+                                        <a href="<?php echo $this->escapeAttr($this->buildEditCardUrl($item['id'], $editorUrl, $backToUrl)); ?>" aria-label="Bearbeiten"><span class="screen-reader-text">Bearbeiten</span>✎</a>
+                                        <form method="post" action="<?php echo $this->escapeAttr($this->buildCardsAdminUrl($editorUrl, $backToUrl)); ?>" style="display:inline;">
                                             <?php echo $this->renderDeleteNonceField(); ?>
                                             <input type="hidden" name="clubcms_form" value="card" />
                                             <input type="hidden" name="clubcms_action" value="delete" />
@@ -223,8 +223,14 @@ final class LandingPageRenderer
         return (string) ob_get_clean();
     }
 
-    private function buildCardsAdminUrl(): string
+    private function buildCardsAdminUrl(string $editorUrl = '', string $backToUrl = ''): string
     {
+        if ($editorUrl !== '') {
+            return $backToUrl !== ''
+                ? (string) add_query_arg(['back_to' => $backToUrl], $editorUrl)
+                : $editorUrl;
+        }
+
         if (function_exists('admin_url')) {
             return (string) add_query_arg(['page' => 'clubcms-cards'], admin_url('admin.php'));
         }
@@ -232,8 +238,20 @@ final class LandingPageRenderer
         return '';
     }
 
-    private function buildEditCardUrl(string $id): string
+    private function buildEditCardUrl(string $id, string $editorUrl = '', string $backToUrl = ''): string
     {
+        if ($editorUrl !== '') {
+            $query = [
+                'edit_card' => $id,
+            ];
+
+            if ($backToUrl !== '') {
+                $query['back_to'] = $backToUrl;
+            }
+
+            return (string) add_query_arg($query, $editorUrl);
+        }
+
         if (function_exists('admin_url')) {
             return (string) add_query_arg([
                 'page' => 'clubcms-cards',
@@ -244,8 +262,20 @@ final class LandingPageRenderer
         return '';
     }
 
-    private function buildNewCardUrl(string $categoryId): string
+    private function buildNewCardUrl(string $categoryId, string $editorUrl = '', string $backToUrl = ''): string
     {
+        if ($editorUrl !== '') {
+            $query = [
+                'category_id' => $categoryId,
+            ];
+
+            if ($backToUrl !== '') {
+                $query['back_to'] = $backToUrl;
+            }
+
+            return (string) add_query_arg($query, $editorUrl);
+        }
+
         if (function_exists('admin_url')) {
             return (string) add_query_arg([
                 'page' => 'clubcms-cards',

@@ -7,9 +7,9 @@ namespace ClubCMS\Tests;
 use ClubCMS\Domain\Category;
 use ClubCMS\Domain\Card;
 use ClubCMS\Domain\CardStatus;
+use ClubCMS\Rendering\LandingPageRenderer;
 use DateTimeImmutable;
 use DateTimeZone;
-use ClubCMS\Rendering\LandingPageRenderer;
 use RuntimeException;
 
 final class LandingPageRendererTest
@@ -18,6 +18,7 @@ final class LandingPageRendererTest
     {
         $this->itRendersAFourColumnLandingPage();
         $this->itAddsEditorControlsForLoggedInUsers();
+        $this->itUsesConfiguredFrontendEditorUrls();
     }
 
     private function itRendersAFourColumnLandingPage(): void
@@ -58,6 +59,20 @@ final class LandingPageRendererTest
         $this->assertContains('Neuer Beitrag', $html, 'Editor controls should contain a new-post action.');
         $this->assertContains('Bearbeiten', $html, 'Editor controls should contain an edit action.');
         $this->assertContains('Löschen', $html, 'Editor controls should contain a delete action.');
+    }
+
+    private function itUsesConfiguredFrontendEditorUrls(): void
+    {
+        $renderer = new LandingPageRenderer();
+        $html = $renderer->render([
+            new Category('cat-news', 'News', 'news', 'date'),
+        ], [
+            new Card('card-1', 'Sommerlager startet', 'cat-news', [], CardStatus::Published, publishedAt: new DateTimeImmutable('2026-07-10 12:00:00', new DateTimeZone('UTC'))),
+        ], true, 'https://example.test/editor/');
+
+        $this->assertContains('https://example.test/editor/?category_id=cat-news', $html, 'New-card action should point to the frontend editor.');
+        $this->assertContains('https://example.test/editor/?edit_card=card-1', $html, 'Edit action should point to the frontend editor.');
+        $this->assertContains('action="https://example.test/editor/"', $html, 'Delete action should post to the frontend editor.');
     }
 
     private function assertContains(string $needle, string $haystack, string $message): void

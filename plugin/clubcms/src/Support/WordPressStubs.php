@@ -19,6 +19,13 @@ if (! function_exists('add_filter')) {
     }
 }
 
+if (! function_exists('remove_action')) {
+    function remove_action($hook_name, $callback, $priority = 10)
+    {
+        return null;
+    }
+}
+
 if (! function_exists('add_shortcode')) {
     function add_shortcode($tag, $callback)
     {
@@ -105,7 +112,7 @@ if (! function_exists('get_option')) {
 if (! function_exists('is_user_logged_in')) {
     function is_user_logged_in()
     {
-        return false;
+        return (bool) ($GLOBALS['clubcms_is_user_logged_in'] ?? false);
     }
 }
 

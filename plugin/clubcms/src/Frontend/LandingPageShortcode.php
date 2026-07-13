@@ -6,6 +6,7 @@ namespace ClubCMS\Frontend;
 
 use ClubCMS\Repository\CategoryRepositoryInterface;
 use ClubCMS\Repository\CardRepositoryInterface;
+use ClubCMS\Infrastructure\EditorSettingsStorageInterface;
 use ClubCMS\Rendering\LandingPageRenderer;
 
 final class LandingPageShortcode
@@ -14,6 +15,7 @@ final class LandingPageShortcode
         private readonly CategoryRepositoryInterface $categoryRepository,
         private readonly CardRepositoryInterface $cardRepository,
         private readonly LandingPageRenderer $renderer = new LandingPageRenderer(),
+        private readonly ?EditorSettingsStorageInterface $editorSettingsStorage = null,
     ) {
     }
 
@@ -30,11 +32,15 @@ final class LandingPageShortcode
     {
         $showEditorControls = function_exists('is_user_logged_in') && is_user_logged_in();
         $categories = $this->resolveCategoriesForColumns($attributes);
+        $editorUrl = $this->resolveEditorUrl($attributes);
+        $backToUrl = $this->currentUrl();
 
         return $this->renderer->render(
             $categories,
             $this->cardRepository->all(),
-            $showEditorControls
+            $showEditorControls,
+            $editorUrl,
+            $backToUrl
         );
     }
 
@@ -45,11 +51,15 @@ final class LandingPageShortcode
     {
         $showEditorControls = function_exists('is_user_logged_in') && is_user_logged_in();
         $category = $this->resolveSingleCategory($attributes);
+        $editorUrl = $this->resolveEditorUrl($attributes);
+        $backToUrl = $this->currentUrl();
 
         return $this->renderer->renderColumn(
             $category,
             $this->cardRepository->all(),
-            $showEditorControls
+            $showEditorControls,
+            $editorUrl,
+            $backToUrl
         );
     }
 
@@ -200,5 +210,56 @@ final class LandingPageShortcode
         }
 
         return null;
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function extractEditorUrl(array $attributes): string
+    {
+        foreach (['editor_url', 'editor-url', 'editor'] as $key) {
+            if (! array_key_exists($key, $attributes)) {
+                continue;
+            }
+
+            $value = $attributes[$key];
+
+            if (is_string($value)) {
+                return trim($value);
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function resolveEditorUrl(array $attributes): string
+    {
+        $explicit = $this->extractEditorUrl($attributes);
+
+        if ($explicit !== '') {
+            return $explicit;
+        }
+
+        if ($this->editorSettingsStorage !== null) {
+            return $this->editorSettingsStorage->getEditorUrl();
+        }
+
+        return '';
+    }
+
+    private function currentUrl(): string
+    {
+        $requestUri = (string) ($_SERVER['REQUEST_URI'] ?? '');
+        $path = parse_url($requestUri, PHP_URL_PATH);
+        $path = is_string($path) && $path !== '' ? $path : '/';
+
+        if (function_exists('home_url')) {
+            return rtrim((string) home_url('/'), '/') . $path;
+        }
+
+        return $path;
     }
 }

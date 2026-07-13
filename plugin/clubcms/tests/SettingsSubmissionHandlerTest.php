@@ -7,6 +7,7 @@ namespace ClubCMS\Tests;
 use ClubCMS\Admin\SettingsSubmissionHandler;
 use ClubCMS\Domain\Category;
 use ClubCMS\Domain\FieldDefinition;
+use ClubCMS\Infrastructure\EditorSettingsStorageInterface;
 use ClubCMS\Repository\CategoryRepositoryInterface;
 use ClubCMS\Repository\FieldDefinitionRepositoryInterface;
 use RuntimeException;
@@ -21,6 +22,8 @@ final class SettingsSubmissionHandlerTest
         $this->itRejectsIncompleteInput();
         $this->itDeletesACategory();
         $this->itDeletesAFieldDefinition();
+        $this->itSavesTheEditorUrl();
+        $this->itRejectsInvalidEditorUrl();
     }
 
     private function itSavesAValidFieldDefinition(): void
@@ -133,6 +136,38 @@ final class SettingsSubmissionHandlerTest
         $this->assertCount(0, $fieldDefinitionRepository->items, 'Field definition should be removed.');
     }
 
+    private function itSavesTheEditorUrl(): void
+    {
+        $categoryRepository = new InMemoryCategoryRepository();
+        $fieldDefinitionRepository = new InMemoryFieldDefinitionRepository();
+        $editorSettingsStorage = new InMemoryEditorSettingsStorage();
+        $handler = new SettingsSubmissionHandler($categoryRepository, $fieldDefinitionRepository, $editorSettingsStorage);
+
+        $saved = $handler->handleEditorSettings([
+            'editor_url' => '/clubcms-editor/',
+        ]);
+
+        $this->assertTrue($saved, 'Valid editor URL should be accepted.');
+        $this->assertSame('/clubcms-editor/', $editorSettingsStorage->editorUrl, 'Editor URL should be stored.');
+        $this->assertSame('/clubcms-editor/', $handler->getEditorUrl(), 'Editor URL should be retrievable from the handler.');
+    }
+
+    private function itRejectsInvalidEditorUrl(): void
+    {
+        $categoryRepository = new InMemoryCategoryRepository();
+        $fieldDefinitionRepository = new InMemoryFieldDefinitionRepository();
+        $editorSettingsStorage = new InMemoryEditorSettingsStorage();
+        $handler = new SettingsSubmissionHandler($categoryRepository, $fieldDefinitionRepository, $editorSettingsStorage);
+
+        $saved = $handler->handleEditorSettings([
+            'editor_url' => 'javascript:alert(1)',
+        ]);
+
+        $this->assertFalse($saved, 'Invalid editor URL should be rejected.');
+        $this->assertSame('', $editorSettingsStorage->editorUrl, 'Invalid editor URL must not be stored.');
+        $this->assertSame('Die Editor-URL ist ungültig.', $handler->getLastError(), 'Invalid editor URL should set a helpful error message.');
+    }
+
     private function assertTrue(bool $condition, string $message): void
     {
         if (! $condition) {
@@ -241,5 +276,20 @@ final class InMemoryFieldDefinitionRepository implements FieldDefinitionReposito
             $this->items,
             static fn (FieldDefinition $item): bool => $item->id !== $id
         ));
+    }
+}
+
+final class InMemoryEditorSettingsStorage implements EditorSettingsStorageInterface
+{
+    public string $editorUrl = '';
+
+    public function getEditorUrl(): string
+    {
+        return $this->editorUrl;
+    }
+
+    public function saveEditorUrl(string $editorUrl): void
+    {
+        $this->editorUrl = $editorUrl;
     }
 }

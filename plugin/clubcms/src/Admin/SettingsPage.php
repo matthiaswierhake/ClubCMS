@@ -47,6 +47,18 @@ final class SettingsPage
         echo '</div>';
     }
 
+    public function renderGeneralSettings(): void
+    {
+        $this->handleEditorSettingsSubmit();
+
+        echo '<div class="wrap">';
+        echo '<h1>ClubCMS Einstellungen</h1>';
+        echo $this->renderStatusNotice('saved');
+        echo $this->renderEditorSettingsNotice();
+        echo $this->renderEditorSettingsForm();
+        echo '</div>';
+    }
+
     private function handleCategorySubmit(): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || ($_POST['clubcms_form'] ?? '') !== 'category') {
@@ -106,6 +118,26 @@ final class SettingsPage
         }
 
         wp_safe_redirect(add_query_arg(['page' => 'clubcms-field-definitions', 'saved' => '1'], admin_url('admin.php')));
+        exit;
+    }
+
+    private function handleEditorSettingsSubmit(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || ($_POST['clubcms_form'] ?? '') !== 'editor_settings') {
+            return;
+        }
+
+        check_admin_referer('clubcms_save_editor_settings');
+
+        if (! current_user_can('manage_options')) {
+            wp_die('Insufficient permissions.');
+        }
+
+        if (! $this->submissionHandler->handleEditorSettings($_POST)) {
+            return;
+        }
+
+        wp_safe_redirect(add_query_arg(['page' => 'clubcms-settings', 'saved' => '1'], admin_url('admin.php')));
         exit;
     }
 
@@ -219,6 +251,44 @@ final class SettingsPage
         }
 
         return '<div class="notice notice-error is-dismissible"><p>' . esc_html($error) . '</p></div>';
+    }
+
+    private function renderEditorSettingsNotice(): string
+    {
+        $error = $this->submissionHandler->getLastError();
+
+        if ($error === null) {
+            return '';
+        }
+
+        return '<div class="notice notice-error is-dismissible"><p>' . esc_html($error) . '</p></div>';
+    }
+
+    private function renderEditorSettingsForm(): string
+    {
+        $editorUrl = $this->submissionHandler->getEditorUrl();
+
+        ob_start();
+        ?>
+        <h2>Frontend-Editor</h2>
+        <p>Hier hinterlegst du die URL der Seite, auf der der Shortcode <code>[clubcms_editor]</code> eingebunden ist.</p>
+        <form method="post">
+            <?php wp_nonce_field('clubcms_save_editor_settings'); ?>
+            <input type="hidden" name="clubcms_form" value="editor_settings" />
+            <table class="form-table" role="presentation">
+                <tr>
+                    <th><label for="editor_url">Editor-URL</label></th>
+                    <td>
+                        <input name="editor_url" id="editor_url" type="text" class="regular-text" placeholder="/clubcms-editor/" value="<?php echo esc_attr($editorUrl); ?>">
+                        <p class="description">Relativer Pfad oder volle URL zur Editor-Seite.</p>
+                    </td>
+                </tr>
+            </table>
+            <?php submit_button('Einstellungen speichern'); ?>
+        </form>
+        <?php
+
+        return (string) ob_get_clean();
     }
 
     private function renderStatusNotice(string $param): string

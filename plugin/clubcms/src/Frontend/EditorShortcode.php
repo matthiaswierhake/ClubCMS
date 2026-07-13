@@ -1,0 +1,465 @@
+<?php
+
+declare(strict_types=1);
+
+namespace ClubCMS\Frontend;
+
+use ClubCMS\Admin\CardSubmissionHandler;
+use ClubCMS\Domain\Card;
+use ClubCMS\Repository\CardRepositoryInterface;
+use ClubCMS\Repository\CategoryRepositoryInterface;
+use ClubCMS\Security\EditorAccessGuard;
+
+final class EditorShortcode
+{
+    /** @var callable(string): void|null */
+    private $redirect;
+
+    /** @var callable(): string|null */
+    private $requestUri;
+
+    /** @var callable(): string|null */
+    private $homeUrl;
+
+    /** @var callable(): void|null */
+    private $terminate;
+
+    private string $backToUrl = '';
+
+    public function __construct(
+        private readonly CategoryRepositoryInterface $categoryRepository,
+        private readonly CardRepositoryInterface $cardRepository,
+        private readonly CardSubmissionHandler $submissionHandler,
+        private readonly EditorAccessGuard $accessGuard = new EditorAccessGuard(),
+        $redirect = null,
+        $requestUri = null,
+        $homeUrl = null,
+        $terminate = null,
+    ) {
+        $this->redirect = $redirect;
+        $this->requestUri = $requestUri;
+        $this->homeUrl = $homeUrl;
+        $this->terminate = $terminate;
+    }
+
+    public function register(): void
+    {
+        add_shortcode('clubcms_editor', [$this, 'render']);
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    public function render(array $attributes = []): string
+    {
+        if (! $this->accessGuard->canAccess()) {
+            return $this->renderAccessDenied();
+        }
+
+        $this->backToUrl = $this->extractBackToUrl($attributes);
+        $this->handleSubmit();
+
+        $editingCard = $this->getEditingCard();
+        $categories = $this->categoryRepository->all();
+
+        ob_start();
+        ?>
+        <section class="clubcms-editor">
+            <header class="clubcms-editor__header">
+                <p class="clubcms-editor__kicker">ClubCMS</p>
+                <h1 class="clubcms-editor__title">Redaktions-Editor</h1>
+                <p class="clubcms-editor__lead">
+                    Inhalte, Cards und Themen werden hier zentral gepflegt.
+                </p>
+            </header>
+
+            <?php echo $this->renderErrorNotice(); ?>
+            <?php echo $this->renderStatusNotice(); ?>
+            <?php echo $this->renderForm($editingCard, $categories); ?>
+            <?php echo $this->renderList(); ?>
+        </section>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
+    private function handleSubmit(): void
+    {
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || ($_POST['clubcms_form'] ?? '') !== 'card') {
+            return;
+        }
+
+        check_admin_referer('clubcms_save_card');
+
+        if (! $this->accessGuard->canAccess()) {
+            wp_die('Insufficient permissions.');
+        }
+
+        $action = (string) ($_POST['clubcms_action'] ?? 'save');
+
+        if ($action === 'delete') {
+            if (! $this->submissionHandler->handleDelete($_POST)) {
+                return;
+            }
+
+            $this->redirect($this->buildReturnUrl(['deleted' => '1']));
+            $this->terminate();
+
+            return;
+        }
+
+        if (! $this->submissionHandler->handleCard($_POST)) {
+            return;
+        }
+
+        $this->redirect($this->buildReturnUrl(['saved' => '1']));
+        $this->terminate();
+    }
+
+    private function getEditingCard(): ?Card
+    {
+        $id = (string) ($_GET['edit_card'] ?? '');
+
+        if ($id === '') {
+            return null;
+        }
+
+        return $this->cardRepository->getById($id);
+    }
+
+    /**
+     * @param array<int, \ClubCMS\Domain\Category> $categories
+     */
+    private function renderForm(?Card $editingCard, array $categories): string
+    {
+        $presetCategoryId = $this->getPresetCategoryId();
+        $card = $editingCard ?? new Card('', '', $presetCategoryId, [], publishedAt: null);
+        $isEditMode = $editingCard !== null;
+
+        ob_start();
+        ?>
+        <article class="clubcms-editor__form">
+            <h2><?php echo $isEditMode ? 'Card bearbeiten' : 'Card anlegen'; ?></h2>
+            <form method="post" action="<?php echo $this->escapeAttr($this->currentUrl()); ?>">
+                <?php wp_nonce_field('clubcms_save_card'); ?>
+                <input type="hidden" name="clubcms_form" value="card" />
+                <input type="hidden" name="clubcms_action" value="save" />
+                <input type="hidden" name="original_id" value="<?php echo $this->escapeAttr($card->id); ?>" />
+                <input type="hidden" name="back_to" value="<?php echo $this->escapeAttr($this->backToUrl); ?>" />
+                <table class="form-table" role="presentation">
+                    <tr>
+                        <th><label for="card_id">ID</label></th>
+                        <td><input name="id" id="card_id" type="text" class="regular-text" required value="<?php echo $this->escapeAttr($card->id); ?>"></td>
+                    </tr>
+                    <tr>
+                        <th><label for="card_title">Titel</label></th>
+                        <td><input name="title" id="card_title" type="text" class="regular-text" required value="<?php echo $this->escapeAttr($card->title); ?>"></td>
+                    </tr>
+                    <tr>
+                        <th><label for="category_id">Kategorie</label></th>
+                        <td>
+                            <select name="category_id" id="category_id">
+                                <option value="">Bitte wählen</option>
+                                <?php foreach ($categories as $category): ?>
+                                    <option value="<?php echo $this->escapeAttr($category->id); ?>" <?php echo $category->id === $card->categoryId ? 'selected' : ''; ?>>
+                                        <?php echo $this->escapeHtml($category->label); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label for="status">Status</label></th>
+                        <td>
+                            <select name="status" id="status">
+                                <option value="draft" <?php echo $card->status->value === 'draft' ? 'selected' : ''; ?>>Draft</option>
+                                <option value="published" <?php echo $card->status->value === 'published' ? 'selected' : ''; ?>>Published</option>
+                                <option value="archived" <?php echo $card->status->value === 'archived' ? 'selected' : ''; ?>>Archived</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label for="visibility">Sichtbarkeit</label></th>
+                        <td>
+                            <select name="visibility" id="visibility">
+                                <option value="public" <?php echo $card->visibility->value === 'public' ? 'selected' : ''; ?>>Public</option>
+                                <option value="members" <?php echo $card->visibility->value === 'members' ? 'selected' : ''; ?>>Members</option>
+                                <option value="editorial" <?php echo $card->visibility->value === 'editorial' ? 'selected' : ''; ?>>Editorial</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label for="position">Position</label></th>
+                        <td><input name="position" id="position" type="number" class="small-text" value="<?php echo $this->escapeAttr((string) $card->position); ?>"></td>
+                    </tr>
+                    <tr>
+                        <th><label for="published_at">Veröffentlicht am</label></th>
+                        <td><input name="published_at" id="published_at" type="text" class="regular-text" placeholder="2026-07-13 10:00:00" value="<?php echo $this->escapeAttr($card->publishedAt?->format('Y-m-d H:i:s') ?? ''); ?>"></td>
+                    </tr>
+                    <tr>
+                        <th><label for="is_static">Statisch</label></th>
+                        <td><label><input name="is_static" id="is_static" type="checkbox" value="1" <?php echo $card->isStatic ? 'checked' : ''; ?>> Statische Card</label></td>
+                    </tr>
+                    <tr>
+                        <th><label for="fields_json">Felder als JSON</label></th>
+                        <td><textarea name="fields_json" id="fields_json" class="large-text code" rows="10"><?php echo $this->escapeHtml((string) json_encode($card->fields, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)); ?></textarea></td>
+                    </tr>
+                </table>
+                <?php submit_button($isEditMode ? 'Card aktualisieren' : 'Card speichern'); ?>
+            </form>
+        </article>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
+    private function renderList(): string
+    {
+        $items = $this->cardRepository->all();
+        $categories = [];
+
+        foreach ($this->categoryRepository->all() as $category) {
+            $categories[$category->id] = $category;
+        }
+
+        ob_start();
+        ?>
+        <article class="clubcms-editor__list">
+            <h2>Vorhandene Cards</h2>
+
+            <?php if ($items === []): ?>
+                <p>Noch keine Cards angelegt.</p>
+            <?php else: ?>
+                <table class="widefat striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Titel</th>
+                            <th>Kategorie</th>
+                            <th>Status</th>
+                            <th>Sichtbarkeit</th>
+                            <th>Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($items as $item): ?>
+                            <?php $categoryLabel = $categories[$item->categoryId]->label ?? $item->categoryId; ?>
+                            <tr>
+                                <td><?php echo $this->escapeHtml($item->id); ?></td>
+                                <td><?php echo $this->escapeHtml($item->title); ?></td>
+                                <td><?php echo $this->escapeHtml($categoryLabel); ?></td>
+                                <td><?php echo $this->escapeHtml($item->status->value); ?></td>
+                                <td><?php echo $this->escapeHtml($item->visibility->value); ?></td>
+                                <td><?php echo $this->renderEditLink($item->id); ?> <?php echo $this->renderDeleteForm($item->id); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </article>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
+    private function renderEditLink(string $id): string
+    {
+        return '<a class="button button-small" href="' . $this->escapeAttr($this->buildUrl(['edit_card' => $id])) . '">Bearbeiten</a>';
+    }
+
+    private function renderDeleteForm(string $id): string
+    {
+        ob_start();
+        ?>
+        <form method="post" action="<?php echo $this->escapeAttr($this->currentUrl()); ?>" style="display:inline;">
+            <?php wp_nonce_field('clubcms_save_card'); ?>
+            <input type="hidden" name="clubcms_form" value="card" />
+            <input type="hidden" name="clubcms_action" value="delete" />
+            <input type="hidden" name="id" value="<?php echo $this->escapeAttr($id); ?>" />
+            <input type="hidden" name="back_to" value="<?php echo $this->escapeAttr($this->backToUrl); ?>" />
+            <button type="submit" class="button button-small button-link-delete">Löschen</button>
+        </form>
+        <?php
+
+        return (string) ob_get_clean();
+    }
+
+    private function renderStatusNotice(): string
+    {
+        if (! isset($_GET['saved']) && ! isset($_GET['deleted'])) {
+            return '';
+        }
+
+        $message = isset($_GET['deleted']) ? 'Card wurde gelöscht.' : 'Card wurde gespeichert.';
+
+        return '<div class="notice notice-success is-dismissible"><p>' . $this->escapeHtml($message) . '</p></div>';
+    }
+
+    private function renderErrorNotice(): string
+    {
+        $error = $this->submissionHandler->getLastError();
+
+        if ($error === null) {
+            return '';
+        }
+
+        return '<div class="notice notice-error is-dismissible"><p>' . $this->escapeHtml($error) . '</p></div>';
+    }
+
+    private function renderAccessDenied(): string
+    {
+        return '<div class="notice notice-warning"><p>Für diesen Bereich fehlen die erforderlichen Rechte.</p></div>';
+    }
+
+    private function getPresetCategoryId(): string
+    {
+        $categoryId = (string) ($_GET['category_id'] ?? '');
+
+        if ($categoryId === '') {
+            return '';
+        }
+
+        return $categoryId;
+    }
+
+    private function currentUrl(): string
+    {
+        $requestUri = $this->requestUri();
+        $path = parse_url($requestUri, PHP_URL_PATH);
+        $path = is_string($path) && $path !== '' ? $path : '/';
+
+        return rtrim($this->homeUrl(), '/') . $path;
+    }
+
+    /**
+     * @param array<string, string> $queryArgs
+     */
+    private function buildUrl(array $queryArgs): string
+    {
+        if ($this->backToUrl !== '' && ! array_key_exists('back_to', $queryArgs)) {
+            $queryArgs['back_to'] = $this->backToUrl;
+        }
+
+        return add_query_arg($queryArgs, $this->currentUrl());
+    }
+
+    private function buildReturnUrl(array $queryArgs = []): string
+    {
+        $baseUrl = $this->backToUrl !== '' ? $this->backToUrl : $this->currentUrl();
+
+        return add_query_arg($queryArgs, $baseUrl);
+    }
+
+    private function redirect(string $url): void
+    {
+        $redirect = $this->redirect ?? static function (string $target): void {
+            if (function_exists('wp_safe_redirect')) {
+                wp_safe_redirect($target);
+            }
+        };
+
+        $redirect($url);
+    }
+
+    private function terminate(): void
+    {
+        $terminate = $this->terminate ?? static function (): void {
+            exit;
+        };
+
+        $terminate();
+    }
+
+    private function requestUri(): string
+    {
+        if ($this->requestUri !== null) {
+            return (string) ($this->requestUri)();
+        }
+
+        return (string) ($_SERVER['REQUEST_URI'] ?? '');
+    }
+
+    private function homeUrl(): string
+    {
+        if ($this->homeUrl !== null) {
+            return (string) ($this->homeUrl)();
+        }
+
+        if (function_exists('home_url')) {
+            return (string) home_url('/');
+        }
+
+        return '/';
+    }
+
+    private function escapeHtml(string $value): string
+    {
+        if (function_exists('esc_html')) {
+            return (string) esc_html($value);
+        }
+
+        return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+
+    private function escapeAttr(string $value): string
+    {
+        if (function_exists('esc_attr')) {
+            return (string) esc_attr($value);
+        }
+
+        return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function extractBackToUrl(array $attributes): string
+    {
+        $value = '';
+
+        if (array_key_exists('back_to', $attributes) && is_string($attributes['back_to'])) {
+            $value = trim($attributes['back_to']);
+        } elseif (array_key_exists('backto', $attributes) && is_string($attributes['backto'])) {
+            $value = trim($attributes['backto']);
+        }
+
+        if ($value !== '') {
+            return $this->normalizeReturnUrl($value);
+        }
+
+        $requestBackTo = (string) ($_GET['back_to'] ?? '');
+
+        if ($requestBackTo !== '') {
+            return $this->normalizeReturnUrl($requestBackTo);
+        }
+
+        $postedBackTo = (string) ($_POST['back_to'] ?? '');
+
+        if ($postedBackTo !== '') {
+            return $this->normalizeReturnUrl($postedBackTo);
+        }
+
+        return '';
+    }
+
+    private function normalizeReturnUrl(string $value): string
+    {
+        $value = trim($value);
+
+        if ($value === '') {
+            return '';
+        }
+
+        if (str_starts_with($value, '/')) {
+            return $value;
+        }
+
+        $scheme = parse_url($value, PHP_URL_SCHEME);
+
+        if (is_string($scheme) && $scheme !== '') {
+            return filter_var($value, FILTER_VALIDATE_URL) ? $value : '';
+        }
+
+        return '';
+    }
+}

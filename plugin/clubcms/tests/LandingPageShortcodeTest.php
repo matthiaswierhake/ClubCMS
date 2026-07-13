@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ClubCMS\Tests;
 
 use ClubCMS\Domain\Category;
+use ClubCMS\Infrastructure\EditorSettingsStorageInterface;
 use ClubCMS\Repository\CategoryRepositoryInterface;
 use ClubCMS\Repository\CardRepositoryInterface;
 use ClubCMS\Frontend\LandingPageShortcode;
@@ -15,6 +16,7 @@ final class LandingPageShortcodeTest
     public function run(): void
     {
         $this->itMapsCategoriesToExplicitColumns();
+        $this->itUsesTheConfiguredEditorUrl();
     }
 
     private function itMapsCategoriesToExplicitColumns(): void
@@ -41,6 +43,42 @@ final class LandingPageShortcodeTest
 
         if ($eventsPosition >= $newsPosition) {
             throw new RuntimeException('The explicit shortcode mapping should place Termine before News.');
+        }
+    }
+
+    private function itUsesTheConfiguredEditorUrl(): void
+    {
+        $shortcode = new LandingPageShortcode(
+            new ShortcodeCategoryRepository([
+                new Category('cat-news', 'News', 'news', 'date'),
+            ]),
+            new EmptyCardRepository(),
+            editorSettingsStorage: new ShortcodeEditorSettingsStorage('/clubcms-editor/')
+        );
+
+        $previousLoginState = $GLOBALS['clubcms_is_user_logged_in'] ?? null;
+
+        try {
+            $GLOBALS['clubcms_is_user_logged_in'] = true;
+
+            $html = $shortcode->render([
+                'spalte_1' => 'cat-news',
+            ]);
+        } finally {
+            if ($previousLoginState === null) {
+                unset($GLOBALS['clubcms_is_user_logged_in']);
+            } else {
+                $GLOBALS['clubcms_is_user_logged_in'] = $previousLoginState;
+            }
+        }
+
+        $this->assertContains('/clubcms-editor/?category_id=cat-news', $html, 'Configured editor URL should be used for new-card actions.');
+    }
+
+    private function assertContains(string $needle, string $haystack, string $message): void
+    {
+        if (! str_contains($haystack, $needle)) {
+            throw new RuntimeException($message . PHP_EOL . 'Missing: ' . $needle);
         }
     }
 }
@@ -103,5 +141,23 @@ final class ShortcodeCategoryRepository implements CategoryRepositoryInterface
             $this->items,
             static fn (Category $item): bool => $item->id !== $id
         ));
+    }
+}
+
+final class ShortcodeEditorSettingsStorage implements EditorSettingsStorageInterface
+{
+    public function __construct(
+        private string $editorUrl = '',
+    ) {
+    }
+
+    public function getEditorUrl(): string
+    {
+        return $this->editorUrl;
+    }
+
+    public function saveEditorUrl(string $editorUrl): void
+    {
+        $this->editorUrl = $editorUrl;
     }
 }
