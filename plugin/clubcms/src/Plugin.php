@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ClubCMS;
 
 use ClubCMS\Admin\Dashboard;
+use ClubCMS\Admin\DiagnosticsPage;
 use ClubCMS\Admin\SettingsPage;
 use ClubCMS\Infrastructure\OptionStorage;
 use ClubCMS\Repository\CategoryRepository;
@@ -16,6 +17,8 @@ final class Plugin
 
     private SettingsPage $settingsPage;
 
+    private DiagnosticsPage $diagnosticsPage;
+
     public function register(): void
     {
         $storage = new OptionStorage();
@@ -24,6 +27,7 @@ final class Plugin
 
         $this->dashboard = new Dashboard($categoryRepository, $fieldDefinitionRepository);
         $this->settingsPage = new SettingsPage($categoryRepository, $fieldDefinitionRepository);
+        $this->diagnosticsPage = new DiagnosticsPage();
 
         add_action('init', [$this, 'registerTextDomain']);
         add_action('admin_menu', [$this, 'registerAdminMenu']);
@@ -62,6 +66,15 @@ final class Plugin
             'manage_options',
             'clubcms-field-definitions',
             [$this->settingsPage, 'renderFieldDefinitions']
+        );
+
+        add_submenu_page(
+            'clubcms',
+            'Tests',
+            'Tests',
+            'manage_options',
+            'clubcms-tests',
+            [$this->diagnosticsPage, 'render']
         );
     }
 }
