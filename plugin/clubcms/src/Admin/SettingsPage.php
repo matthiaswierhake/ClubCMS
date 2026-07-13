@@ -78,16 +78,23 @@ final class SettingsPage
                 return;
             }
 
-            wp_safe_redirect(add_query_arg(['page' => 'clubcms-categories', 'deleted' => '1'], admin_url('admin.php')));
-            exit;
+            if ($this->redirectIfPossible(add_query_arg(['page' => 'clubcms-categories', 'deleted' => '1'], admin_url('admin.php')))) {
+                exit;
+            }
+
+            $_GET['deleted'] = '1';
+            return;
         }
 
         if (! $this->submissionHandler->handleCategory($_POST)) {
             return;
         }
 
-        wp_safe_redirect(add_query_arg(['page' => 'clubcms-categories', 'saved' => '1'], admin_url('admin.php')));
-        exit;
+        if ($this->redirectIfPossible(add_query_arg(['page' => 'clubcms-categories', 'saved' => '1'], admin_url('admin.php')))) {
+            exit;
+        }
+
+        $_GET['saved'] = '1';
     }
 
     private function handleFieldDefinitionSubmit(): void
@@ -109,16 +116,23 @@ final class SettingsPage
                 return;
             }
 
-            wp_safe_redirect(add_query_arg(['page' => 'clubcms-field-definitions', 'deleted' => '1'], admin_url('admin.php')));
-            exit;
+            if ($this->redirectIfPossible(add_query_arg(['page' => 'clubcms-field-definitions', 'deleted' => '1'], admin_url('admin.php')))) {
+                exit;
+            }
+
+            $_GET['deleted'] = '1';
+            return;
         }
 
         if (! $this->submissionHandler->handleFieldDefinition($_POST)) {
             return;
         }
 
-        wp_safe_redirect(add_query_arg(['page' => 'clubcms-field-definitions', 'saved' => '1'], admin_url('admin.php')));
-        exit;
+        if ($this->redirectIfPossible(add_query_arg(['page' => 'clubcms-field-definitions', 'saved' => '1'], admin_url('admin.php')))) {
+            exit;
+        }
+
+        $_GET['saved'] = '1';
     }
 
     private function handleEditorSettingsSubmit(): void
@@ -137,8 +151,11 @@ final class SettingsPage
             return;
         }
 
-        wp_safe_redirect(add_query_arg(['page' => 'clubcms-settings', 'saved' => '1'], admin_url('admin.php')));
-        exit;
+        if ($this->redirectIfPossible(add_query_arg(['page' => 'clubcms-settings', 'saved' => '1'], admin_url('admin.php')))) {
+            exit;
+        }
+
+        $_GET['saved'] = '1';
     }
 
     private function getEditingCategory(): ?Category
@@ -396,5 +413,19 @@ final class SettingsPage
         </form>
         <?php
         return (string) ob_get_clean();
+    }
+
+    private function redirectIfPossible(string $url): bool
+    {
+        if (function_exists('headers_sent') && headers_sent()) {
+            return false;
+        }
+
+        if (function_exists('wp_safe_redirect')) {
+            wp_safe_redirect($url);
+            return true;
+        }
+
+        return false;
     }
 }

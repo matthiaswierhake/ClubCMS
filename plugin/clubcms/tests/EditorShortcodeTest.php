@@ -23,6 +23,9 @@ final class EditorShortcodeTest
         $this->itBlocksUnauthorizedUsers();
         $this->itSavesCardsFromTheFrontendEditor();
         $this->itShowsValidationErrorsForInvalidInput();
+        $this->itFallsBackToAnInlineNoticeWhenHeadersAreAlreadySent();
+        $this->itRendersTemplateChoicesForNewCards();
+        $this->itPrefillsDuplicatedCardsAsNewDrafts();
     }
 
     private function itRendersTheEditorForAuthorizedUsers(): void
@@ -177,6 +180,121 @@ final class EditorShortcodeTest
         $this->assertCount(0, $repository->items, 'Invalid input must not be stored.');
     }
 
+    private function itFallsBackToAnInlineNoticeWhenHeadersAreAlreadySent(): void
+    {
+        $repository = new EditorShortcodeCardRepository();
+        $redirectTarget = null;
+        $terminated = false;
+
+        $shortcode = new EditorShortcode(
+            new EditorShortcodeCategoryRepository([
+                new Category('cat-news', 'News', 'news', 'date'),
+            ]),
+            $repository,
+            new CardSubmissionHandler($repository),
+            new EditorAccessGuard(static fn (string $capability): bool => true),
+            redirect: static function (string $url) use (&$redirectTarget): void {
+                $redirectTarget = $url;
+            },
+            requestUri: static fn (): string => '/editor/',
+            homeUrl: static fn (): string => 'https://example.test',
+            terminate: static function () use (&$terminated): void {
+                $terminated = true;
+            },
+            headersSent: static fn (): bool => true
+        );
+
+        $previousServer = $_SERVER;
+        $previousPost = $_POST;
+        $previousGet = $_GET;
+
+        try {
+            $_SERVER['REQUEST_METHOD'] = 'POST';
+            $_POST = [
+                'clubcms_form' => 'card',
+                'clubcms_action' => 'save',
+                'id' => 'card-inline',
+                'original_id' => '',
+                'back_to' => '/landing-page/',
+                'title' => 'Inline',
+                'category_id' => 'cat-news',
+                'fields_json' => '{"teaser":"Hallo"}',
+                'status' => 'published',
+                'visibility' => 'public',
+                'position' => '1',
+                'published_at' => '',
+                'is_static' => '',
+            ];
+            $_GET = [];
+
+            $html = $shortcode->render();
+        } finally {
+            $_SERVER = $previousServer;
+            $_POST = $previousPost;
+            $_GET = $previousGet;
+        }
+
+        $this->assertSame(null, $redirectTarget, 'No redirect should be attempted once headers are already sent.');
+        $this->assertFalse($terminated, 'No terminate call should happen without redirect.');
+        $this->assertContains('Card wurde gespeichert.', $html, 'A success notice should be shown inline.');
+    }
+
+    private function itRendersTemplateChoicesForNewCards(): void
+    {
+        $shortcode = $this->createShortcode(
+            new EditorShortcodeCategoryRepository([
+                new Category('cat-news', 'News', 'news', 'date'),
+            ]),
+            new EditorShortcodeCardRepository()
+        );
+
+        $previousGet = $_GET;
+
+        try {
+            $_GET = [
+                'template' => 'event',
+            ];
+
+            $html = $shortcode->render();
+        } finally {
+            $_GET = $previousGet;
+        }
+
+        $this->assertContains('Vorlage für neue Beiträge', $html, 'Template chooser should be rendered.');
+        $this->assertContains('template=news', $html, 'Template links should be rendered.');
+        $this->assertContains('location', $html, 'Template fields should prefill the editor form.');
+        $this->assertContains('value="members"', $html, 'Template should preselect the visibility.');
+    }
+
+    private function itPrefillsDuplicatedCardsAsNewDrafts(): void
+    {
+        $shortcode = $this->createShortcode(
+            new EditorShortcodeCategoryRepository([
+                new Category('cat-news', 'News', 'news', 'date'),
+            ]),
+            new EditorShortcodeCardRepository([
+                new Card('card-1', 'Sommerlager', 'cat-news', ['teaser' => 'Hallo'], CardStatus::Published, Visibility::Public),
+            ])
+        );
+
+        $previousGet = $_GET;
+
+        try {
+            $_GET = [
+                'duplicate_card' => 'card-1',
+            ];
+
+            $html = $shortcode->render();
+        } finally {
+            $_GET = $previousGet;
+        }
+
+        $this->assertContains('Duplizieren', $html, 'Duplicate action should be rendered.');
+        $this->assertContains('card-1-kopie', $html, 'Duplicated cards should get a new id suggestion.');
+        $this->assertContains('Sommerlager Kopie', $html, 'Duplicated cards should get a copied title.');
+        $this->assertContains('value="draft"', $html, 'Duplicated cards should start as drafts.');
+    }
+
     private function createShortcode(
         CategoryRepositoryInterface $categories,
         CardRepositoryInterface $cards
@@ -206,6 +324,13 @@ final class EditorShortcodeTest
     private function assertTrue(bool $condition, string $message): void
     {
         if (! $condition) {
+            throw new RuntimeException($message);
+        }
+    }
+
+    private function assertFalse(bool $condition, string $message): void
+    {
+        if ($condition) {
             throw new RuntimeException($message);
         }
     }

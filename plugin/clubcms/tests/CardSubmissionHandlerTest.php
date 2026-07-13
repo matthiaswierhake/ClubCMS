@@ -7,8 +7,10 @@ namespace ClubCMS\Tests;
 use ClubCMS\Admin\CardSubmissionHandler;
 use ClubCMS\Domain\Card;
 use ClubCMS\Domain\CardStatus;
+use ClubCMS\Domain\Category;
 use ClubCMS\Domain\Visibility;
 use ClubCMS\Repository\CardRepositoryInterface;
+use ClubCMS\Repository\CategoryRepositoryInterface;
 use RuntimeException;
 
 final class CardSubmissionHandlerTest
@@ -18,12 +20,18 @@ final class CardSubmissionHandlerTest
         $this->itSavesAValidCard();
         $this->itDeletesAValidCard();
         $this->itRejectsInvalidJson();
+        $this->itRejectsUnknownCategories();
     }
 
     private function itSavesAValidCard(): void
     {
         $repository = new InMemoryCardRepository();
-        $handler = new CardSubmissionHandler($repository);
+        $handler = new CardSubmissionHandler(
+            $repository,
+            new CardSubmissionHandlerCategoryRepository([
+                new Category('cat-news', 'News', 'news', 'date'),
+            ])
+        );
 
         $saved = $handler->handleCard([
             'id' => 'card-news',
@@ -67,7 +75,12 @@ final class CardSubmissionHandlerTest
     private function itRejectsInvalidJson(): void
     {
         $repository = new InMemoryCardRepository();
-        $handler = new CardSubmissionHandler($repository);
+        $handler = new CardSubmissionHandler(
+            $repository,
+            new CardSubmissionHandlerCategoryRepository([
+                new Category('cat-news', 'News', 'news', 'date'),
+            ])
+        );
 
         $saved = $handler->handleCard([
             'id' => 'card-bad',
@@ -78,6 +91,28 @@ final class CardSubmissionHandlerTest
 
         $this->assertFalse($saved, 'Invalid JSON should be rejected.');
         $this->assertCount(0, $repository->items, 'Invalid JSON must not be stored.');
+    }
+
+    private function itRejectsUnknownCategories(): void
+    {
+        $repository = new InMemoryCardRepository();
+        $handler = new CardSubmissionHandler(
+            $repository,
+            new CardSubmissionHandlerCategoryRepository([
+                new Category('cat-news', 'News', 'news', 'date'),
+            ])
+        );
+
+        $saved = $handler->handleCard([
+            'id' => 'card-bad-category',
+            'title' => 'Bad category',
+            'category_id' => 'missing-category',
+            'fields_json' => '{"teaser":"Action"}',
+        ]);
+
+        $this->assertFalse($saved, 'Unknown categories should be rejected.');
+        $this->assertSame('Die ausgewählte Kategorie existiert nicht.', $handler->getLastError(), 'Unknown categories should set a helpful error message.');
+        $this->assertCount(0, $repository->items, 'Unknown categories must not be stored.');
     }
 
     private function assertTrue(bool $condition, string $message): void
@@ -146,6 +181,47 @@ final class InMemoryCardRepository implements CardRepositoryInterface
         $this->items = array_values(array_filter(
             $this->items,
             static fn (Card $item): bool => $item->id !== $id
+        ));
+    }
+}
+
+final class CardSubmissionHandlerCategoryRepository implements CategoryRepositoryInterface
+{
+    /**
+     * @param array<int, Category> $items
+     */
+    public function __construct(
+        public array $items = [],
+    ) {
+    }
+
+    public function all(): array
+    {
+        return $this->items;
+    }
+
+    public function getById(string $id): ?Category
+    {
+        foreach ($this->items as $item) {
+            if ($item->id === $id) {
+                return $item;
+            }
+        }
+
+        return null;
+    }
+
+    public function save(Category $category): void
+    {
+        $this->delete($category->id);
+        $this->items[] = $category;
+    }
+
+    public function delete(string $id): void
+    {
+        $this->items = array_values(array_filter(
+            $this->items,
+            static fn (Category $item): bool => $item->id !== $id
         ));
     }
 }

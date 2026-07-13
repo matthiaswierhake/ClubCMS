@@ -47,7 +47,7 @@ final class Plugin
         $cardRepository = new CardRepository($storage);
         $fieldDefinitionRepository = new FieldDefinitionRepository($storage);
         $submissionHandler = new SettingsSubmissionHandler($categoryRepository, $fieldDefinitionRepository, $editorSettingsStorage);
-        $cardSubmissionHandler = new CardSubmissionHandler($cardRepository);
+        $cardSubmissionHandler = new CardSubmissionHandler($cardRepository, $categoryRepository);
         $editorAccessGuard = new EditorAccessGuard();
 
         $this->dashboard = new Dashboard($categoryRepository, $fieldDefinitionRepository, $editorSettingsStorage);

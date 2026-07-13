@@ -98,6 +98,7 @@ Der Editor zeigt:
 
 - vorhandene Cards
 - Bearbeiten
+- Duplizieren
 - Loeschen
 - neue Cards anlegen
 
@@ -106,6 +107,12 @@ Wichtige Punkte:
 - Zugriff haben Redakteure mit `edit_posts` und Administratoren mit `manage_options`
 - das Formular arbeitet direkt im Frontend
 - das Backend bleibt fuer Nicht-Admins gesperrt
+
+Der Einstieg in den Editor ist an mehreren Stellen vorgesehen:
+
+- ueber die Dashboard-Kachel im ClubCMS-Backend
+- ueber die Bearbeiten- und Neu-Links auf der Landingpage
+- optional mit einer zentral gespeicherten `editor_url`
 
 Damit die Aktionen auf der Landingpage zum Frontend-Editor fuehren, kann beim Landingpage-Shortcode die Ziel-URL angegeben werden:
 
@@ -138,6 +145,12 @@ https://example.test/clubcms-editor/
 Diese Einstellung wird von der Landingpage automatisch verwendet, solange im Shortcode keine eigene `editor_url` gesetzt ist.
 
 Wenn du von der Landingpage in den Editor gehst, nimmt ClubCMS die Ursprungseite mit und springt nach dem Speichern dorthin zurueck.
+
+Auch die Dashboard-Kachel fuehrt direkt in diesen Editor, damit Redakteure ohne Umweg starten koennen.
+
+Im Frontend-Editor gibt es Vorlagen fuer neue Beitraege wie Standard, News und Veranstaltung.
+
+Zusaetzlich koennen bestehende Cards direkt dupliziert werden, damit neue Entwuerfe schneller entstehen.
 
 Wenn bei der Eingabe etwas nicht passt, zeigt der Editor eine direkte Fehlermeldung im Frontend an.
 

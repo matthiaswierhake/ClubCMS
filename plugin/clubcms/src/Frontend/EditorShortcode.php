@@ -6,6 +6,7 @@ namespace ClubCMS\Frontend;
 
 use ClubCMS\Admin\CardSubmissionHandler;
 use ClubCMS\Domain\Card;
+use ClubCMS\Domain\CardStatus;
 use ClubCMS\Repository\CardRepositoryInterface;
 use ClubCMS\Repository\CategoryRepositoryInterface;
 use ClubCMS\Security\EditorAccessGuard;
@@ -24,7 +25,16 @@ final class EditorShortcode
     /** @var callable(): void|null */
     private $terminate;
 
+    /** @var callable(): bool|null */
+    private $headersSent;
+
     private string $backToUrl = '';
+
+    private ?string $flashStatus = null;
+
+    private string $templateKey = '';
+
+    private string $duplicateCardId = '';
 
     public function __construct(
         private readonly CategoryRepositoryInterface $categoryRepository,
@@ -35,11 +45,13 @@ final class EditorShortcode
         $requestUri = null,
         $homeUrl = null,
         $terminate = null,
+        $headersSent = null,
     ) {
         $this->redirect = $redirect;
         $this->requestUri = $requestUri;
         $this->homeUrl = $homeUrl;
         $this->terminate = $terminate;
+        $this->headersSent = $headersSent;
     }
 
     public function register(): void
@@ -57,6 +69,8 @@ final class EditorShortcode
         }
 
         $this->backToUrl = $this->extractBackToUrl($attributes);
+        $this->templateKey = $this->extractTemplateKey($attributes);
+        $this->duplicateCardId = $this->extractDuplicateCardId($attributes);
         $this->handleSubmit();
 
         $editingCard = $this->getEditingCard();
@@ -75,6 +89,7 @@ final class EditorShortcode
 
             <?php echo $this->renderErrorNotice(); ?>
             <?php echo $this->renderStatusNotice(); ?>
+            <?php echo $this->renderTemplateChooser($editingCard, $categories); ?>
             <?php echo $this->renderForm($editingCard, $categories); ?>
             <?php echo $this->renderList(); ?>
         </section>
@@ -102,8 +117,10 @@ final class EditorShortcode
                 return;
             }
 
-            $this->redirect($this->buildReturnUrl(['deleted' => '1']));
-            $this->terminate();
+            $this->flashStatus = 'deleted';
+            if ($this->redirectOrDefer($this->buildReturnUrl(['deleted' => '1']))) {
+                $this->terminate();
+            }
 
             return;
         }
@@ -112,8 +129,10 @@ final class EditorShortcode
             return;
         }
 
-        $this->redirect($this->buildReturnUrl(['saved' => '1']));
-        $this->terminate();
+        $this->flashStatus = 'saved';
+        if ($this->redirectOrDefer($this->buildReturnUrl(['saved' => '1']))) {
+            $this->terminate();
+        }
     }
 
     private function getEditingCard(): ?Card
@@ -134,6 +153,28 @@ final class EditorShortcode
     {
         $presetCategoryId = $this->getPresetCategoryId();
         $card = $editingCard ?? new Card('', '', $presetCategoryId, [], publishedAt: null);
+
+        if ($editingCard === null && $this->duplicateCardId !== '') {
+            $duplicateSource = $this->cardRepository->getById($this->duplicateCardId);
+
+            if ($duplicateSource !== null) {
+                $card = new Card(
+                    $duplicateSource->id . '-kopie',
+                    $duplicateSource->title . ' Kopie',
+                    $duplicateSource->categoryId,
+                    $duplicateSource->fields,
+                    CardStatus::Draft,
+                    $duplicateSource->visibility,
+                    $duplicateSource->isStatic,
+                    $duplicateSource->position,
+                    null
+                );
+            }
+        }
+
+        if ($editingCard === null && $this->templateKey !== '') {
+            $card = $this->applyTemplate($card, $this->templateKey);
+        }
         $isEditMode = $editingCard !== null;
 
         ob_start();
@@ -146,6 +187,8 @@ final class EditorShortcode
                 <input type="hidden" name="clubcms_action" value="save" />
                 <input type="hidden" name="original_id" value="<?php echo $this->escapeAttr($card->id); ?>" />
                 <input type="hidden" name="back_to" value="<?php echo $this->escapeAttr($this->backToUrl); ?>" />
+                <input type="hidden" name="template" value="<?php echo $this->escapeAttr($this->templateKey); ?>" />
+                <input type="hidden" name="duplicate_card" value="<?php echo $this->escapeAttr($this->duplicateCardId); ?>" />
                 <table class="form-table" role="presentation">
                     <tr>
                         <th><label for="card_id">ID</label></th>
@@ -250,7 +293,7 @@ final class EditorShortcode
                                 <td><?php echo $this->escapeHtml($categoryLabel); ?></td>
                                 <td><?php echo $this->escapeHtml($item->status->value); ?></td>
                                 <td><?php echo $this->escapeHtml($item->visibility->value); ?></td>
-                                <td><?php echo $this->renderEditLink($item->id); ?> <?php echo $this->renderDeleteForm($item->id); ?></td>
+                                <td><?php echo $this->renderEditLink($item->id); ?> <?php echo $this->renderDuplicateLink($item->id); ?> <?php echo $this->renderDeleteForm($item->id); ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -265,6 +308,11 @@ final class EditorShortcode
     private function renderEditLink(string $id): string
     {
         return '<a class="button button-small" href="' . $this->escapeAttr($this->buildUrl(['edit_card' => $id])) . '">Bearbeiten</a>';
+    }
+
+    private function renderDuplicateLink(string $id): string
+    {
+        return '<a class="button button-small" href="' . $this->escapeAttr($this->buildUrl(['duplicate_card' => $id])) . '">Duplizieren</a>';
     }
 
     private function renderDeleteForm(string $id): string
@@ -287,12 +335,57 @@ final class EditorShortcode
     private function renderStatusNotice(): string
     {
         if (! isset($_GET['saved']) && ! isset($_GET['deleted'])) {
-            return '';
+            if ($this->flashStatus === null) {
+                return '';
+            }
+
+            $message = $this->flashStatus === 'deleted' ? 'Card wurde gelÃ¶scht.' : 'Card wurde gespeichert.';
+
+            return '<div class="notice notice-success is-dismissible"><p>' . $this->escapeHtml($message) . '</p></div>';
         }
 
         $message = isset($_GET['deleted']) ? 'Card wurde gelöscht.' : 'Card wurde gespeichert.';
 
         return '<div class="notice notice-success is-dismissible"><p>' . $this->escapeHtml($message) . '</p></div>';
+    }
+
+    /**
+     * @param array<int, \ClubCMS\Domain\Category> $categories
+     */
+    private function renderTemplateChooser(?Card $editingCard, array $categories): string
+    {
+        if ($editingCard !== null) {
+            return '';
+        }
+
+        $templates = $this->templateDefinitions();
+        $currentCategoryId = $this->getPresetCategoryId();
+        $baseUrl = $this->currentUrl();
+
+        ob_start();
+        ?>
+        <article class="clubcms-editor__templates">
+            <h2>Vorlage für neue Beiträge</h2>
+            <p>Wähle ein Startmuster für die neue Card.</p>
+            <div class="clubcms-editor__template-links">
+                <?php foreach ($templates as $key => $template): ?>
+                    <?php
+                    $query = ['template' => $key];
+                    if ($currentCategoryId !== '') {
+                        $query['category_id'] = $currentCategoryId;
+                    }
+                    if ($this->backToUrl !== '') {
+                        $query['back_to'] = $this->backToUrl;
+                    }
+                    $url = add_query_arg($query, $baseUrl);
+                    ?>
+                    <a class="button button-secondary" href="<?php echo $this->escapeAttr($url); ?>"><?php echo $this->escapeHtml($template['label']); ?></a>
+                <?php endforeach; ?>
+            </div>
+        </article>
+        <?php
+
+        return (string) ob_get_clean();
     }
 
     private function renderErrorNotice(): string
@@ -303,7 +396,19 @@ final class EditorShortcode
             return '';
         }
 
-        return '<div class="notice notice-error is-dismissible"><p>' . $this->escapeHtml($error) . '</p></div>';
+        $fieldErrors = $this->submissionHandler->getLastFieldErrors();
+
+        if ($fieldErrors === []) {
+            return '<div class="notice notice-error is-dismissible"><p>' . $this->escapeHtml($error) . '</p></div>';
+        }
+
+        $items = '';
+
+        foreach ($fieldErrors as $fieldError) {
+            $items .= '<li>' . $this->escapeHtml($fieldError) . '</li>';
+        }
+
+        return '<div class="notice notice-error is-dismissible"><p>Bitte pruefe die markierten Felder.</p><ul>' . $items . '</ul></div>';
     }
 
     private function renderAccessDenied(): string
@@ -359,6 +464,17 @@ final class EditorShortcode
         };
 
         $redirect($url);
+    }
+
+    private function redirectOrDefer(string $url): bool
+    {
+        if ($this->headersAlreadySent()) {
+            return false;
+        }
+
+        $this->redirect($url);
+
+        return true;
     }
 
     private function terminate(): void
@@ -442,6 +558,155 @@ final class EditorShortcode
         return '';
     }
 
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function extractTemplateKey(array $attributes): string
+    {
+        foreach (['template', 'vorlage', 'preset'] as $key) {
+            if (! array_key_exists($key, $attributes)) {
+                continue;
+            }
+
+            $value = $attributes[$key];
+
+            if (is_string($value)) {
+                $value = trim($value);
+
+                if ($value !== '') {
+                    return $this->normalizeTemplateKey($value);
+                }
+            }
+        }
+
+        $requestTemplate = (string) ($_GET['template'] ?? '');
+
+        if ($requestTemplate !== '') {
+            return $this->normalizeTemplateKey($requestTemplate);
+        }
+
+        $postedTemplate = (string) ($_POST['template'] ?? '');
+
+        if ($postedTemplate !== '') {
+            return $this->normalizeTemplateKey($postedTemplate);
+        }
+
+        return '';
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function extractDuplicateCardId(array $attributes): string
+    {
+        if (array_key_exists('duplicate_card', $attributes) && is_string($attributes['duplicate_card'])) {
+            $value = trim($attributes['duplicate_card']);
+
+            if ($value !== '') {
+                return $this->normalizeTemplateKey($value);
+            }
+        }
+
+        $requestValue = (string) ($_GET['duplicate_card'] ?? '');
+
+        if ($requestValue !== '') {
+            return $this->normalizeTemplateKey($requestValue);
+        }
+
+        $postedValue = (string) ($_POST['duplicate_card'] ?? '');
+
+        if ($postedValue !== '') {
+            return $this->normalizeTemplateKey($postedValue);
+        }
+
+        return '';
+    }
+
+    private function normalizeTemplateKey(string $value): string
+    {
+        $value = strtolower(trim($value));
+        $value = preg_replace('/[^a-z0-9_-]/', '', $value) ?? '';
+
+        return trim($value, "_-");
+    }
+
+    /**
+     * @return array<string, array{label: string, fields: array<string, mixed>, status: string, visibility: string, isStatic: bool, position: int}>
+     */
+    private function templateDefinitions(): array
+    {
+        return [
+            'standard' => [
+                'label' => 'Standard',
+                'fields' => [
+                    'headline' => '',
+                    'teaser' => '',
+                    'body' => '',
+                ],
+                'status' => 'draft',
+                'visibility' => 'public',
+                'isStatic' => false,
+                'position' => 0,
+            ],
+            'news' => [
+                'label' => 'News',
+                'fields' => [
+                    'headline' => '',
+                    'teaser' => '',
+                    'body' => '',
+                    'link_text' => '',
+                    'link_url' => '',
+                ],
+                'status' => 'published',
+                'visibility' => 'public',
+                'isStatic' => false,
+                'position' => 0,
+            ],
+            'event' => [
+                'label' => 'Veranstaltung',
+                'fields' => [
+                    'date' => '',
+                    'time' => '',
+                    'location' => '',
+                    'teaser' => '',
+                    'body' => '',
+                ],
+                'status' => 'published',
+                'visibility' => 'members',
+                'isStatic' => false,
+                'position' => 0,
+            ],
+        ];
+    }
+
+    private function applyTemplate(Card $card, string $templateKey): Card
+    {
+        $templates = $this->templateDefinitions();
+        $template = $templates[$templateKey] ?? $templates['standard'];
+
+        return new Card(
+            $card->id,
+            $card->title,
+            $card->categoryId,
+            $template['fields'],
+            $this->normalizeCardStatus($template['status']),
+            $this->normalizeVisibility($template['visibility']),
+            $template['isStatic'],
+            $template['position'],
+            $card->publishedAt
+        );
+    }
+
+    private function normalizeCardStatus(string $value): \ClubCMS\Domain\CardStatus
+    {
+        return \ClubCMS\Domain\CardStatus::tryFrom($value) ?? \ClubCMS\Domain\CardStatus::Draft;
+    }
+
+    private function normalizeVisibility(string $value): \ClubCMS\Domain\Visibility
+    {
+        return \ClubCMS\Domain\Visibility::tryFrom($value) ?? \ClubCMS\Domain\Visibility::Public;
+    }
+
     private function normalizeReturnUrl(string $value): string
     {
         $value = trim($value);
@@ -462,4 +727,14 @@ final class EditorShortcode
 
         return '';
     }
+
+    private function headersAlreadySent(): bool
+    {
+        if ($this->headersSent !== null) {
+            return (bool) ($this->headersSent)();
+        }
+
+        return function_exists('headers_sent') && headers_sent();
+    }
+
 }

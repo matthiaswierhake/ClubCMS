@@ -13,8 +13,8 @@ Dieses Dokument ist bewusst so aufgebaut, dass wir es laufend erweitern koennen:
 ## Aktueller Stand
 
 - Projektstatus: Inhaltsverwaltung und Frontend-Editor in Aufbau
-- Aktuelle Version: `v0.5.4`
-- Naechster sinnvoller Meilenstein: `v0.5.5`
+- Aktuelle Version: `v0.5.7`
+- Naechster sinnvoller Meilenstein: `v0.5.8`
 
 ## Versionierungsmodell
 
@@ -47,6 +47,7 @@ Beispiel:
 - `v0.5.2` = Ruecksprung nach Bearbeitung
 - `v0.5.3` = Dashboard-Kachel fuer den Editor
 - `v0.5.4` = Frontend-Fehlermeldungen im Editor
+- `v0.5.5` = Vorlagen fuer neue Beitraege
 
 ## Roadmap nach Versionen
 
@@ -344,7 +345,7 @@ Ziel: Im ClubCMS-Dashboard gibt es einen direkten Schnellzugriff auf den Fronten
 Erledigt:
 
 - ✅ Dashboard-Kachel fuer den Frontend-Editor ergaenzt
-- ✅ Kachel verlinkt auf die gespeicherte Editor-URL
+- ✅ Kachel verlinkt direkt auf die gespeicherte Editor-URL
 - ✅ Testabdeckung fuer die Kachel ergaenzt
 - ✅ Version auf `v0.5.3` angehoben
 
@@ -363,6 +364,8 @@ Erledigt:
 - ✅ Fehlermeldungen aus der Card-Validierung werden im Frontend angezeigt
 - ✅ Invalides JSON und fehlende Pflichtangaben werden sichtbar rueckgemeldet
 - ✅ Testabdeckung fuer Fehlermeldungen ergaenzt
+- ✅ Header-sichere Rueckmeldungen ohne Redirect bei bereits gesetzten Headers
+- ✅ Redirect-Fallback fuer Admin-Seiten ohne gesetzte Headers ergaenzt
 - ✅ Version auf `v0.5.4` angehoben
 
 Offen:
@@ -371,29 +374,56 @@ Offen:
 - ❌ bessere Eingabevalidierung
 - ❌ schnellere Redaktionsaktionen
 
-### v0.5.5 - Editor-Feinschliff
+### v0.5.5 - Vorlagen fuer neue Beitraege
+
+Ziel: Neue Cards koennen mit passenden Vorlagen gestartet werden.
+
+Erledigt:
+
+- ✅ Vorlagen fuer neue Beitraege im Frontend-Editor ergaenzt
+- ✅ Template-Links fuer Standard, News und Veranstaltung
+- ✅ Vorlagen wirken auf Felder, Status und Sichtbarkeit
+- ✅ Testabdeckung fuer Vorlagen ergaenzt
+
+Offen:
+
+- ❌ bessere Eingabevalidierung
+- ❌ schnellere Redaktionsaktionen
+
+### v0.5.6 - Editor-Feinschliff
 
 Ziel: Der Frontend-Editor wird im Alltag angenehmer nutzbar.
 
 Erledigt:
 
-- ❌ Vorlagen fuer neue Beitraege
-- ❌ bessere Eingabevalidierung
-- ❌ schnellere Redaktionsaktionen
+- ✅ bessere Eingabevalidierung
+- ✅ Einstieg in den Editor ueber Dashboard-Kachel und Landingpage dokumentiert
 
 Offen:
 
-- ❌ Vorlagen fuer neue Beitraege
-- ❌ bessere Eingabevalidierung
-- ❌ schnellere Redaktionsaktionen
+- ❌ weitere Komfortfunktionen
+
+### v0.5.7 - Schnellaktionen im Editor
+
+Ziel: Redakteure koennen bestehende Cards schneller als neue Entwuerfe weiterverwenden.
+
+Erledigt:
+
+- ✅ Card duplizieren aus der Editorliste
+- ✅ Duplikat wird als neuer Entwurf mit Vorschlag erzeugt
+- ✅ Testabdeckung fuer Duplizieren ergaenzt
+
+Offen:
+
+- ❌ weitere Schnellaktionen
 
 ## Fortschrittspflege
 
 Wenn wir weiterarbeiten, wird dieser Block jeweils aktualisiert:
 
-- Version: `v0.5.4`
+- Version: `v0.5.7`
 - Letzte Aenderung: 2026-07-13
-- Naechster Fokus: Vorlagen und weitere Redaktionshilfen
+- Naechster Fokus: weitere Schnellaktionen und Vorschau
 
 ## Aenderungslog
 
@@ -426,6 +456,14 @@ Wenn wir weiterarbeiten, wird dieser Block jeweils aktualisiert:
 
 - Fehler aus der Card-Validierung werden im Frontend angezeigt
 - Test fuer die Fehlermeldung ergaenzt
+- Redirect-Fallback bei bereits gesetzten Headers ergaenzt
+- Redirect-Fallback fuer Admin-Seiten ergaenzt
+
+### v0.5.5 - Vorlagen fuer neue Beitraege
+
+- Vorlagen im Frontend-Editor eingefuehrt
+- Standard-, News- und Veranstaltungs-Vorlagen ergaenzt
+- Test fuer Vorlagen ergaenzt
 
 ### v0.4.6 - Admin-Bar wieder admin-spezifisch
 

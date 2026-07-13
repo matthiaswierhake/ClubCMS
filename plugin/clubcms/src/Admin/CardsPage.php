@@ -50,16 +50,23 @@ final class CardsPage
                 return;
             }
 
-            wp_safe_redirect(add_query_arg(['page' => 'clubcms-cards', 'deleted' => '1'], admin_url('admin.php')));
-            exit;
+            if ($this->redirectIfPossible(add_query_arg(['page' => 'clubcms-cards', 'deleted' => '1'], admin_url('admin.php')))) {
+                exit;
+            }
+
+            $_GET['deleted'] = '1';
+            return;
         }
 
         if (! $this->submissionHandler->handleCard($_POST)) {
             return;
         }
 
-        wp_safe_redirect(add_query_arg(['page' => 'clubcms-cards', 'saved' => '1'], admin_url('admin.php')));
-        exit;
+        if ($this->redirectIfPossible(add_query_arg(['page' => 'clubcms-cards', 'saved' => '1'], admin_url('admin.php')))) {
+            exit;
+        }
+
+        $_GET['saved'] = '1';
     }
 
     private function getEditingCard(): ?Card
@@ -236,5 +243,19 @@ final class CardsPage
         </form>
         <?php
         return (string) ob_get_clean();
+    }
+
+    private function redirectIfPossible(string $url): bool
+    {
+        if (function_exists('headers_sent') && headers_sent()) {
+            return false;
+        }
+
+        if (function_exists('wp_safe_redirect')) {
+            wp_safe_redirect($url);
+            return true;
+        }
+
+        return false;
     }
 }

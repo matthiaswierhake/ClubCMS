@@ -8,13 +8,20 @@ use ClubCMS\Domain\Card;
 use ClubCMS\Domain\CardStatus;
 use ClubCMS\Domain\Visibility;
 use ClubCMS\Repository\CardRepositoryInterface;
+use ClubCMS\Repository\CategoryRepositoryInterface;
 
 final class CardSubmissionHandler
 {
     private ?string $lastError = null;
 
+    /**
+     * @var array<string, string>
+     */
+    private array $lastFieldErrors = [];
+
     public function __construct(
         private readonly CardRepositoryInterface $cardRepository,
+        private readonly ?CategoryRepositoryInterface $categoryRepository = null,
     ) {
     }
 
@@ -24,11 +31,20 @@ final class CardSubmissionHandler
     }
 
     /**
+     * @return array<string, string>
+     */
+    public function getLastFieldErrors(): array
+    {
+        return $this->lastFieldErrors;
+    }
+
+    /**
      * @param array<string, mixed> $post
      */
     public function handleCard(array $post): bool
     {
         $this->lastError = null;
+        $this->lastFieldErrors = [];
 
         $id = $this->sanitizeKey((string) ($post['id'] ?? ''));
         $originalId = $this->sanitizeKey((string) ($post['original_id'] ?? $id));
@@ -43,7 +59,25 @@ final class CardSubmissionHandler
         $publishedAt = $this->parseDateTime($publishedAtInput);
 
         if ($id === '' || $title === '' || $categoryId === '') {
-            $this->lastError = 'ID, Titel und Kategorie sind erforderlich.';
+            if ($id === '') {
+                $this->addFieldError('id', 'Die ID ist erforderlich.');
+            }
+
+            if ($title === '') {
+                $this->addFieldError('title', 'Der Titel ist erforderlich.');
+            }
+
+            if ($categoryId === '') {
+                $this->addFieldError('category_id', 'Die Kategorie ist erforderlich.');
+            }
+        }
+
+        if ($categoryId !== '' && $this->categoryRepository !== null && $this->categoryRepository->getById($categoryId) === null) {
+            $this->addFieldError('category_id', 'Die ausgewählte Kategorie existiert nicht.');
+        }
+
+        if ($this->lastFieldErrors !== []) {
+            $this->lastError = implode(' ', array_values($this->lastFieldErrors));
 
             return false;
         }
@@ -57,12 +91,22 @@ final class CardSubmissionHandler
         }
 
         if (! is_array($fields)) {
-            $this->lastError = 'Die Card-Felder müssen als JSON-Objekt oder JSON-Array angegeben werden.';
+            $this->addFieldError('fields_json', 'Die Card-Felder müssen als JSON-Objekt oder JSON-Array angegeben werden.');
 
             return false;
         }
 
         if (trim($publishedAtInput) !== '' && $publishedAt === null) {
+            $this->addFieldError('published_at', 'Das Veröffentlichungsdatum ist ungültig.');
+
+            $this->lastError = implode(' ', array_values($this->lastFieldErrors));
+
+            return false;
+        }
+
+        if ($this->lastFieldErrors !== []) {
+            $this->lastError = implode(' ', array_values($this->lastFieldErrors));
+
             return false;
         }
 
@@ -93,6 +137,7 @@ final class CardSubmissionHandler
     public function handleDelete(array $post): bool
     {
         $this->lastError = null;
+        $this->lastFieldErrors = [];
 
         $id = $this->sanitizeKey((string) ($post['id'] ?? ''));
 
@@ -130,6 +175,12 @@ final class CardSubmissionHandler
 
             return null;
         }
+    }
+
+    private function addFieldError(string $field, string $message): void
+    {
+        $this->lastFieldErrors[$field] = $message;
+        $this->lastError = implode(' ', array_values($this->lastFieldErrors));
     }
 
     private function sanitizeKey(string $value): string
