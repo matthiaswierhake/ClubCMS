@@ -20,6 +20,7 @@ final class LandingPageShortcode
     public function register(): void
     {
         add_shortcode('clubcms_landing_page', [$this, 'render']);
+        add_shortcode('clubcms_column', [$this, 'renderColumn']);
     }
 
     /**
@@ -32,6 +33,21 @@ final class LandingPageShortcode
 
         return $this->renderer->render(
             $categories,
+            $this->cardRepository->all(),
+            $showEditorControls
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    public function renderColumn(array $attributes = []): string
+    {
+        $showEditorControls = function_exists('is_user_logged_in') && is_user_logged_in();
+        $category = $this->resolveSingleCategory($attributes);
+
+        return $this->renderer->renderColumn(
+            $category,
             $this->cardRepository->all(),
             $showEditorControls
         );
@@ -145,5 +161,44 @@ final class LandingPageShortcode
         $value = preg_replace('/[^a-z0-9_-]/', '', $value) ?? '';
 
         return trim($value, "_-");
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function resolveSingleCategory(array $attributes): ?\ClubCMS\Domain\Category
+    {
+        $lookup = '';
+
+        foreach (['thema', 'kategorie', 'category', 'slug', 'id'] as $key) {
+            if (! array_key_exists($key, $attributes)) {
+                continue;
+            }
+
+            $value = $attributes[$key];
+
+            if (is_string($value) && trim($value) !== '') {
+                $lookup = trim($value);
+                break;
+            }
+        }
+
+        if ($lookup === '') {
+            return null;
+        }
+
+        $categories = $this->categoryRepository->all();
+
+        foreach ($categories as $category) {
+            if ($this->normalizeLookupValue($category->id) === $this->normalizeLookupValue($lookup)) {
+                return $category;
+            }
+
+            if ($this->normalizeLookupValue($category->slug) === $this->normalizeLookupValue($lookup)) {
+                return $category;
+            }
+        }
+
+        return null;
     }
 }

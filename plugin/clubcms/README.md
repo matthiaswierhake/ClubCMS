@@ -74,6 +74,18 @@ Wichtig:
 - Nicht gesetzte Spalten werden automatisch mit den übrigen Kategorien gefüllt.
 - Wenn eine Spalte bewusst leer bleiben soll, kann dort kein Wert gesetzt werden.
 
+Wenn du nur eine einzelne Spalte für ein bestimmtes Thema einbinden willst, nutze den Einzel-Shortcode:
+
+```text
+[clubcms_column thema="cat-events"]
+```
+
+Auch hier gilt:
+
+- `thema`, `kategorie`, `category`, `slug` oder `id` können verwendet werden
+- es wird genau eine Card für dieses Thema gerendert
+- das ist sinnvoll für modulare Seiten, Unterseiten oder individuelle Layouts
+
 ## Projektfortschritt und Roadmap
 
 Der aktuelle Fortschritt, die Versionierung und die nächsten Schritte sind in der Roadmap dokumentiert:

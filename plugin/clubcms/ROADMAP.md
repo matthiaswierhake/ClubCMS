@@ -13,7 +13,7 @@ Dieses Dokument ist bewusst so aufgebaut, dass wir es laufend erweitern können:
 ## Aktueller Stand
 
 - Projektstatus: Inhaltsverwaltung begonnen
-- Aktuelle Version: `v0.3.1`
+- Aktuelle Version: `v0.3.2`
 - Nächster sinnvoller Meilenstein: `v0.4.0`
 
 ## Versionierungsmodell
@@ -34,6 +34,7 @@ Beispiel:
 - `v0.2.3` = Bugfixes und Robustheit
 - `v0.3.0` = Inhaltsverwaltung beginnt
 - `v0.3.1` = Shortcode-Feinsteuerung für Spalten
+- `v0.3.2` = Einzelspalten-Shortcode
 
 ## Roadmap nach Versionen
 
@@ -149,6 +150,22 @@ Offen:
 - ❌ Auswahl im Backend-Editor noch nicht vorhanden
 - ❌ Validierung nicht vorhandener Kategorien im Frontend sichtbarer machen
 
+### v0.3.2 — Einzelspalte als Shortcode
+
+Ziel: Jedes Thema kann als einzelne Spalte per Shortcode eingebunden werden.
+
+Erledigt:
+
+- ✅ Einzelspalten-Shortcode ergänzt
+- ✅ Thema kann über ID oder Slug adressiert werden
+- ✅ README um Einzelspalten-Beispiel ergänzt
+- ✅ Test für Einzelspalten-Rendering ergänzt
+
+Offen:
+
+- ❌ Kurzcode-Generator im Backend fehlt noch
+- ❌ sichtbare Fehlermeldung für unbekannte Themen fehlt noch
+
 ### v0.4.0 — Bearbeiten direkt aus der Oberfläche
 
 Ziel: Eingeloggte Nutzer bekommen die vorgesehenen Bearbeitungsaktionen.
@@ -201,7 +218,7 @@ Offen:
 
 Wenn wir weiterarbeiten, wird dieser Block jeweils aktualisiert:
 
-- Version: `v0.3.1`
+- Version: `v0.3.2`
 - Letzte Änderung: 2026-07-13
 - Nächster Fokus: Card-Workflow und Editor für Inhalte
 
@@ -219,6 +236,11 @@ Wenn wir weiterarbeiten, wird dieser Block jeweils aktualisiert:
 - Shortcode um `spalte_1` bis `spalte_4` erweitert
 - README um Beispiel ergänzt
 - Landingpage-Shortcode-Test ergänzt
+
+### v0.3.2 — Einzelspalten-Shortcode
+
+- neuer Shortcode `clubcms_column`
+- einzelne Themenkarte direkt einbindbar
 
 ### v0.2.3 — Testseite abgesichert
 

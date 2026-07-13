@@ -73,6 +73,7 @@ final class TestSuite
             SettingsSubmissionHandlerTest::class,
             LandingPageRendererTest::class,
             LandingPageShortcodeTest::class,
+            LandingPageColumnShortcodeTest::class,
         ];
     }
 }
