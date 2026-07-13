@@ -12,7 +12,7 @@ Dieses Dokument ist bewusst so aufgebaut, dass wir es laufend erweitern können:
 ## Aktueller Stand
 
 - Projektstatus: Card-Grundlage umgesetzt
-- Aktuelle Version: `v0.2.1`
+- Aktuelle Version: `v0.2.2`
 - Nächster sinnvoller Meilenstein: `v0.3.0`
 
 ## Versionierungsmodell
@@ -29,6 +29,7 @@ Beispiel:
 - `v0.1.0` = Grundstruktur vorhanden
 - `v0.2.0` = erste Inhaltslogik und Rollenlogik
 - `v0.2.1` = kleine Nacharbeiten ohne neue Kernfunktion
+- `v0.2.2` = Wartung und Tooling-Verbesserungen
 
 ## Roadmap nach Versionen
 
@@ -81,6 +82,21 @@ Offen:
 
 - [ ] Testergebnisse pro Einzeltest historisieren
 - [ ] Statusanzeige für letzte Ausführung ergänzen
+
+### v0.2.2 — WordPress-Stubs ergänzt
+
+Ziel: IDE- und Analyse-Warnungen zu WordPress-Funktionen reduzieren.
+
+Erledigt:
+
+- [x] WordPress-Stubs für globale Funktionen ergänzt
+- [x] Dev-Autoload um Stubs erweitert
+- [x] Stubs in den direkten Testlauf eingebunden
+
+Offen:
+
+- [ ] falls nötig weitere WP-spezifische Helper ergänzen
+- [ ] Analysewarnungen im Editor gegenprüfen
 
 ### v0.3.0 — Inhaltsverwaltung
 
@@ -149,7 +165,7 @@ Offen:
 
 Wenn wir weiterarbeiten, wird dieser Block jeweils aktualisiert:
 
-- Version: `v0.2.1`
+- Version: `v0.2.2`
 - Letzte Änderung: 2026-07-13
 - Nächster Fokus: Editor, Bearbeitungsworkflow und Rollenlogik
 
@@ -167,6 +183,7 @@ Wenn wir weiterarbeiten, wird dieser Block jeweils aktualisiert:
 - Renderer liest Cards und Kategorien
 - Tests für Card- und Landingpage-Ausgabe ergänzt
 - Testseite um Einzelstart pro Test erweitert
+- WordPress-Stubs für IDE und lokale Entwicklung ergänzt
 
 ## Offene Ideen für spätere Ergänzungen
 

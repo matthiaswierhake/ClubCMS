@@ -7,6 +7,7 @@ require_once __DIR__ . '/../src/Domain/Category.php';
 require_once __DIR__ . '/../src/Domain/CardStatus.php';
 require_once __DIR__ . '/../src/Domain/Visibility.php';
 require_once __DIR__ . '/../src/Domain/Card.php';
+require_once __DIR__ . '/../src/Support/WordPressStubs.php';
 require_once __DIR__ . '/../src/Repository/CategoryRepositoryInterface.php';
 require_once __DIR__ . '/../src/Repository/FieldDefinitionRepositoryInterface.php';
 require_once __DIR__ . '/../src/Repository/CardRepositoryInterface.php';
