@@ -13,5 +13,9 @@ interface FieldDefinitionRepositoryInterface
      */
     public function all(): array;
 
+    public function getById(string $id): ?FieldDefinition;
+
     public function save(FieldDefinition $definition): void;
+
+    public function delete(string $id): void;
 }

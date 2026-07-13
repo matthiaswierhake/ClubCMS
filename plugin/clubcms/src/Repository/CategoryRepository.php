@@ -33,6 +33,17 @@ final class CategoryRepository implements CategoryRepositoryInterface
         ));
     }
 
+    public function getById(string $id): ?Category
+    {
+        foreach ($this->all() as $category) {
+            if ($category->id === $id) {
+                return $category;
+            }
+        }
+
+        return null;
+    }
+
     public function save(Category $category): void
     {
         $items = [];
@@ -44,6 +55,19 @@ final class CategoryRepository implements CategoryRepositoryInterface
         }
 
         $items[] = $category->toArray();
+
+        $this->storage->update(self::OPTION_NAME, $items);
+    }
+
+    public function delete(string $id): void
+    {
+        $items = [];
+
+        foreach ($this->all() as $existing) {
+            if ($existing->id !== $id) {
+                $items[] = $existing->toArray();
+            }
+        }
 
         $this->storage->update(self::OPTION_NAME, $items);
     }

@@ -13,5 +13,9 @@ interface CategoryRepositoryInterface
      */
     public function all(): array;
 
+    public function getById(string $id): ?Category;
+
     public function save(Category $category): void;
+
+    public function delete(string $id): void;
 }

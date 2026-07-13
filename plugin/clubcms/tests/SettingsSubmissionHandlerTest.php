@@ -19,6 +19,8 @@ final class SettingsSubmissionHandlerTest
         $this->itRejectsInvalidJson();
         $this->itSavesAValidCategory();
         $this->itRejectsIncompleteInput();
+        $this->itDeletesACategory();
+        $this->itDeletesAFieldDefinition();
     }
 
     private function itSavesAValidFieldDefinition(): void
@@ -99,6 +101,38 @@ final class SettingsSubmissionHandlerTest
         $this->assertCount(0, $fieldDefinitionRepository->items, 'Rejected field definition must not be stored.');
     }
 
+    private function itDeletesACategory(): void
+    {
+        $categoryRepository = new InMemoryCategoryRepository([
+            new Category('cat-news', 'News', 'news'),
+        ]);
+        $fieldDefinitionRepository = new InMemoryFieldDefinitionRepository();
+        $handler = new SettingsSubmissionHandler($categoryRepository, $fieldDefinitionRepository);
+
+        $deleted = $handler->handleCategoryDelete([
+            'id' => 'cat-news',
+        ]);
+
+        $this->assertTrue($deleted, 'Category delete should be accepted.');
+        $this->assertCount(0, $categoryRepository->items, 'Category should be removed.');
+    }
+
+    private function itDeletesAFieldDefinition(): void
+    {
+        $categoryRepository = new InMemoryCategoryRepository();
+        $fieldDefinitionRepository = new InMemoryFieldDefinitionRepository([
+            new FieldDefinition('fd-news', 'News', [['name' => 'headline', 'type' => 'text']]),
+        ]);
+        $handler = new SettingsSubmissionHandler($categoryRepository, $fieldDefinitionRepository);
+
+        $deleted = $handler->handleFieldDefinitionDelete([
+            'id' => 'fd-news',
+        ]);
+
+        $this->assertTrue($deleted, 'Field definition delete should be accepted.');
+        $this->assertCount(0, $fieldDefinitionRepository->items, 'Field definition should be removed.');
+    }
+
     private function assertTrue(bool $condition, string $message): void
     {
         if (! $condition) {
@@ -131,35 +165,81 @@ final class SettingsSubmissionHandlerTest
 final class InMemoryCategoryRepository implements CategoryRepositoryInterface
 {
     /**
-     * @var array<int, Category>
+     * @param array<int, Category> $items
      */
-    public array $items = [];
+    public function __construct(
+        public array $items = [],
+    ) {
+    }
 
     public function all(): array
     {
         return $this->items;
     }
 
+    public function getById(string $id): ?Category
+    {
+        foreach ($this->items as $item) {
+            if ($item->id === $id) {
+                return $item;
+            }
+        }
+
+        return null;
+    }
+
     public function save(Category $category): void
     {
+        $this->delete($category->id);
         $this->items[] = $category;
+    }
+
+    public function delete(string $id): void
+    {
+        $this->items = array_values(array_filter(
+            $this->items,
+            static fn (Category $item): bool => $item->id !== $id
+        ));
     }
 }
 
 final class InMemoryFieldDefinitionRepository implements FieldDefinitionRepositoryInterface
 {
     /**
-     * @var array<int, FieldDefinition>
+     * @param array<int, FieldDefinition> $items
      */
-    public array $items = [];
+    public function __construct(
+        public array $items = [],
+    ) {
+    }
 
     public function all(): array
     {
         return $this->items;
     }
 
+    public function getById(string $id): ?FieldDefinition
+    {
+        foreach ($this->items as $item) {
+            if ($item->id === $id) {
+                return $item;
+            }
+        }
+
+        return null;
+    }
+
     public function save(FieldDefinition $definition): void
     {
+        $this->delete($definition->id);
         $this->items[] = $definition;
+    }
+
+    public function delete(string $id): void
+    {
+        $this->items = array_values(array_filter(
+            $this->items,
+            static fn (FieldDefinition $item): bool => $item->id !== $id
+        ));
     }
 }

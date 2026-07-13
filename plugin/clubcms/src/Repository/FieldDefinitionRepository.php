@@ -33,6 +33,17 @@ final class FieldDefinitionRepository implements FieldDefinitionRepositoryInterf
         ));
     }
 
+    public function getById(string $id): ?FieldDefinition
+    {
+        foreach ($this->all() as $definition) {
+            if ($definition->id === $id) {
+                return $definition;
+            }
+        }
+
+        return null;
+    }
+
     public function save(FieldDefinition $definition): void
     {
         $items = [];
@@ -44,6 +55,19 @@ final class FieldDefinitionRepository implements FieldDefinitionRepositoryInterf
         }
 
         $items[] = $definition->toArray();
+
+        $this->storage->update(self::OPTION_NAME, $items);
+    }
+
+    public function delete(string $id): void
+    {
+        $items = [];
+
+        foreach ($this->all() as $existing) {
+            if ($existing->id !== $id) {
+                $items[] = $existing->toArray();
+            }
+        }
 
         $this->storage->update(self::OPTION_NAME, $items);
     }

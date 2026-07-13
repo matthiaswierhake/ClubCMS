@@ -14,14 +14,27 @@ final class DiagnosticsPage
             wp_die('Insufficient permissions.');
         }
 
+        $this->loadTestFiles();
         $results = null;
+
+        if (! class_exists(TestSuite::class)) {
+            echo '<div class="wrap">';
+            echo '<h1>ClubCMS Tests</h1>';
+            echo '<div class="notice notice-warning"><p>Die Testklassen sind in dieser Installation nicht verfügbar.</p></div>';
+            echo '</div>';
+
+            return;
+        }
+
         $suite = new TestSuite();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['clubcms_form'] ?? '') === 'run_tests') {
-            $testClass = $this->normalizeTestClass((string) ($_POST['clubcms_test'] ?? ''));
+            $testClass = $this->normalizeTestClass(
+                (string) ($_POST['clubcms_test'] ?? ''),
+                $suite->availableTests()
+            );
 
             check_admin_referer('clubcms_run_tests');
-            $this->loadTestFiles();
             $results = $suite->run($testClass);
         }
 
@@ -101,7 +114,10 @@ final class DiagnosticsPage
         return (string) ob_get_clean();
     }
 
-    private function normalizeTestClass(string $testClass): ?string
+    /**
+     * @param array<int, array{class: class-string, label: string}> $tests
+     */
+    private function normalizeTestClass(string $testClass, array $tests): ?string
     {
         if ($testClass === '') {
             return null;
@@ -109,7 +125,7 @@ final class DiagnosticsPage
 
         $allowed = array_map(
             static fn (array $test): string => $test['class'],
-            (new TestSuite())->availableTests()
+            $tests
         );
 
         return in_array($testClass, $allowed, true) ? $testClass : null;

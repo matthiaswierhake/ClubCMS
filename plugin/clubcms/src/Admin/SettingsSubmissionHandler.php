@@ -32,6 +32,7 @@ final class SettingsSubmissionHandler
         $this->lastError = null;
 
         $id = $this->sanitizeKey((string) ($post['id'] ?? ''));
+        $originalId = $this->sanitizeKey((string) ($post['original_id'] ?? $id));
         $label = $this->sanitizeText((string) ($post['label'] ?? ''));
         $slug = $this->sanitizeTitle((string) ($post['slug'] ?? ''));
         $sortMode = $this->sanitizeKey((string) ($post['sort_mode'] ?? 'date'));
@@ -39,6 +40,10 @@ final class SettingsSubmissionHandler
 
         if ($id === '' || $label === '' || $slug === '') {
             return false;
+        }
+
+        if ($originalId !== '' && $originalId !== $id) {
+            $this->categoryRepository->delete($originalId);
         }
 
         $this->categoryRepository->save(
@@ -56,6 +61,7 @@ final class SettingsSubmissionHandler
         $this->lastError = null;
 
         $id = $this->sanitizeKey((string) ($post['id'] ?? ''));
+        $originalId = $this->sanitizeKey((string) ($post['original_id'] ?? $id));
         $label = $this->sanitizeText((string) ($post['label'] ?? ''));
         $json = (string) ($post['fields_json'] ?? '[]');
 
@@ -79,9 +85,49 @@ final class SettingsSubmissionHandler
             return false;
         }
 
+        if ($originalId !== '' && $originalId !== $id) {
+            $this->fieldDefinitionRepository->delete($originalId);
+        }
+
         $this->fieldDefinitionRepository->save(
             new FieldDefinition($id, $label, $fields)
         );
+
+        return true;
+    }
+
+    /**
+     * @param array<string, mixed> $post
+     */
+    public function handleCategoryDelete(array $post): bool
+    {
+        $this->lastError = null;
+
+        $id = $this->sanitizeKey((string) ($post['id'] ?? ''));
+
+        if ($id === '') {
+            return false;
+        }
+
+        $this->categoryRepository->delete($id);
+
+        return true;
+    }
+
+    /**
+     * @param array<string, mixed> $post
+     */
+    public function handleFieldDefinitionDelete(array $post): bool
+    {
+        $this->lastError = null;
+
+        $id = $this->sanitizeKey((string) ($post['id'] ?? ''));
+
+        if ($id === '') {
+            return false;
+        }
+
+        $this->fieldDefinitionRepository->delete($id);
 
         return true;
     }

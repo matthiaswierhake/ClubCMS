@@ -5,15 +5,16 @@ Dokument für Fortschritt, Versionierung und nächste Schritte.
 Dieses Dokument ist bewusst so aufgebaut, dass wir es laufend erweitern können:
 
 - neue Punkte einfach unten ergänzen
-- erledigte Punkte auf `Done` setzen
+- erledigte Punkte mit einem grünen Haken markieren
+- offene Punkte mit einem roten Kreuz markieren
 - Versionen als Meilensteine pflegen
 - den aktuellen Status oben aktuell halten
 
 ## Aktueller Stand
 
-- Projektstatus: Card-Grundlage umgesetzt
-- Aktuelle Version: `v0.2.2`
-- Nächster sinnvoller Meilenstein: `v0.3.0`
+- Projektstatus: Inhaltsverwaltung begonnen
+- Aktuelle Version: `v0.3.0`
+- Nächster sinnvoller Meilenstein: `v0.4.0`
 
 ## Versionierungsmodell
 
@@ -30,6 +31,8 @@ Beispiel:
 - `v0.2.0` = erste Inhaltslogik und Rollenlogik
 - `v0.2.1` = kleine Nacharbeiten ohne neue Kernfunktion
 - `v0.2.2` = Wartung und Tooling-Verbesserungen
+- `v0.2.3` = Bugfixes und Robustheit
+- `v0.3.0` = Inhaltsverwaltung beginnt
 
 ## Roadmap nach Versionen
 
@@ -39,16 +42,16 @@ Ziel: Das Plugin ist strukturell sauber aufgesetzt und die Basis ist klar.
 
 Erledigt:
 
-- [x] Plugin-Struktur prüfen und festziehen
-- [x] Hauptmodule und Namenskonventionen definieren
-- [x] Inhalte und Layout-Anforderungen aus README und Vorlage festhalten
-- [x] Basis-Dokumentation anlegen
-- [x] Landingpage-Grundstruktur als Shortcode bereitstellen
+- ✅ Plugin-Struktur prüfen und festziehen
+- ✅ Hauptmodule und Namenskonventionen definieren
+- ✅ Inhalte und Layout-Anforderungen aus README und Vorlage festhalten
+- ✅ Basis-Dokumentation anlegen
+- ✅ Landingpage-Grundstruktur als Shortcode bereitstellen
+- ✅ technische Architektur für Cards, Shortcodes und Editoren definieren
 
 Offen:
 
-- [x] technische Architektur für Cards, Shortcodes und Editoren definieren
-- [ ] Rollenmodell für Admin / Redakteur / eingeloggte Nutzer festlegen
+- ❌ Rollenmodell für Admin / Redakteur / eingeloggte Nutzer festlegen
 
 ### v0.2.0 — Card-Grundlage
 
@@ -56,17 +59,17 @@ Ziel: Inhalte können als Cards gespeichert und auf der Landingpage angezeigt we
 
 Erledigt:
 
-- [x] Card-Datenmodell ergänzt
-- [x] Card-Persistenz in der WordPress-Optionsspeicherung ergänzt
-- [x] Landingpage rendert Kategorien als Spalten
-- [x] Beiträge werden innerhalb der Spalten angezeigt
-- [x] Basis-Tests für Card-Modell und Rendering ergänzt
+- ✅ Card-Datenmodell ergänzt
+- ✅ Card-Persistenz in der WordPress-Optionsspeicherung ergänzt
+- ✅ Landingpage rendert Kategorien als Spalten
+- ✅ Beiträge werden innerhalb der Spalten angezeigt
+- ✅ Basis-Tests für Card-Modell und Rendering ergänzt
 
 Offen:
 
-- [ ] echte Beitragsverwaltung mit Anlegen/Bearbeiten/Löschen
-- [ ] Sortierung je Kategorie vollständig parametrierbar machen
-- [ ] Sichtbarkeitslogik für eingeloggte Nutzer präzisieren
+- ❌ echte Beitragsverwaltung mit Anlegen/Bearbeiten/Löschen
+- ❌ Sortierung je Kategorie vollständig parametrierbar machen
+- ❌ Sichtbarkeitslogik für eingeloggte Nutzer präzisieren
 
 ### v0.2.1 — Testseite verbessert
 
@@ -74,14 +77,14 @@ Ziel: Die ClubCMS-Testseite kann jeden Test einzeln starten.
 
 Erledigt:
 
-- [x] Einzeltests auf der Diagnostics-Seite ergänzt
-- [x] Test-Auswahl auf erlaubte Tests begrenzt
-- [x] Übersichtlicher Start-Button für alle Tests beibehalten
+- ✅ Einzeltests auf der Diagnostics-Seite ergänzt
+- ✅ Test-Auswahl auf erlaubte Tests begrenzt
+- ✅ Übersichtlicher Start-Button für alle Tests beibehalten
 
 Offen:
 
-- [ ] Testergebnisse pro Einzeltest historisieren
-- [ ] Statusanzeige für letzte Ausführung ergänzen
+- ❌ Testergebnisse pro Einzeltest historisieren
+- ❌ Statusanzeige für letzte Ausführung ergänzen
 
 ### v0.2.2 — WordPress-Stubs ergänzt
 
@@ -89,14 +92,28 @@ Ziel: IDE- und Analyse-Warnungen zu WordPress-Funktionen reduzieren.
 
 Erledigt:
 
-- [x] WordPress-Stubs für globale Funktionen ergänzt
-- [x] Dev-Autoload um Stubs erweitert
-- [x] Stubs in den direkten Testlauf eingebunden
+- ✅ WordPress-Stubs für globale Funktionen ergänzt
+- ✅ Dev-Autoload um Stubs erweitert
+- ✅ Stubs in den direkten Testlauf eingebunden
 
 Offen:
 
-- [ ] falls nötig weitere WP-spezifische Helper ergänzen
-- [ ] Analysewarnungen im Editor gegenprüfen
+- ❌ falls nötig weitere WP-spezifische Helper ergänzen
+- ❌ Analysewarnungen im Editor gegenprüfen
+
+### v0.2.3 — Testseite abgesichert
+
+Ziel: Die Diagnostics-Seite darf nicht mehr fatale Fehler werfen, wenn Testklassen fehlen.
+
+Erledigt:
+
+- ✅ Testklassen nur nach dem Laden instanziiert
+- ✅ fehlende Testdateien werden abgefangen
+- ✅ Testseite bleibt auch bei unvollständiger Installation stabil
+
+Offen:
+
+- ❌ optional: Hinweise zur Testseite in der Admin-Doku ergänzen
 
 ### v0.3.0 — Inhaltsverwaltung
 
@@ -104,14 +121,16 @@ Ziel: Inhalte können gepflegt und strukturiert zugeordnet werden.
 
 Erledigt:
 
-- [ ] Kategorie-/Themen-Editor konzipieren
-- [ ] Formularfelder je Kategorie definierbar machen
+- ✅ Kategorie-/Themen-Editor als CRUD-Funktion ergänzt
+- ✅ Formularfelder je Kategorie definierbar gemacht
+- ✅ Kategorien bearbeitbar und löschbar gemacht
+- ✅ Felddefinitionen bearbeitbar und löschbar gemacht
 
 Offen:
 
-- [ ] Zuordnung von Themen zu Spalten per Shortcode
-- [ ] Initiale Beitragslogik für Cards
-- [ ] Datenmodell für Beiträge und Kategorien konsolidieren
+- ❌ Zuordnung von Themen zu Spalten per Shortcode
+- ❌ Initiale Beitragslogik für Cards
+- ❌ Datenmodell für Beiträge und Kategorien konsolidieren
 
 ### v0.4.0 — Bearbeiten direkt aus der Oberfläche
 
@@ -119,14 +138,14 @@ Ziel: Eingeloggte Nutzer bekommen die vorgesehenen Bearbeitungsaktionen.
 
 Erledigt:
 
-- [ ] Icons für Löschen, Bearbeiten und Neuer Beitrag definieren
-- [ ] Verlinkung in einen zentralen Editor spezifizieren
+- ❌ Icons für Löschen, Bearbeiten und Neuer Beitrag definieren
+- ❌ Verlinkung in einen zentralen Editor spezifizieren
 
 Offen:
 
-- [ ] UI nur für berechtigte Nutzer einblenden
-- [ ] Backend-Zugriff für Redakteure sperren
-- [ ] Admin-Ausnahme sauber abbilden
+- ❌ UI nur für berechtigte Nutzer einblenden
+- ❌ Backend-Zugriff für Redakteure sperren
+- ❌ Admin-Ausnahme sauber abbilden
 
 ### v0.5.0 — Redaktions- und Rechtekonzept
 
@@ -134,14 +153,14 @@ Ziel: Das Produkt ist im redaktionellen Alltag kontrolliert nutzbar.
 
 Erledigt:
 
-- [ ] Rollen und Berechtigungen finalisieren
-- [ ] Zugriffspfade zum Editor absichern
+- ❌ Rollen und Berechtigungen finalisieren
+- ❌ Zugriffspfade zum Editor absichern
 
 Offen:
 
-- [ ] Admin darf WordPress-Backend nutzen
-- [ ] Redakteure arbeiten nur über ClubCMS-Editor
-- [ ] Fehler- und Berechtigungsfälle definieren
+- ❌ Admin darf WordPress-Backend nutzen
+- ❌ Redakteure arbeiten nur über ClubCMS-Editor
+- ❌ Fehler- und Berechtigungsfälle definieren
 
 ### v1.0.0 — Erste produktive Version
 
@@ -149,27 +168,47 @@ Ziel: Die erste belastbare Version für echten Einsatz.
 
 Erledigt:
 
-- [ ] Landingpage strukturell umgesetzt
-- [ ] Themen/Spalten funktionieren
-- [ ] Bearbeitungsworkflow vorhanden
-- [ ] Rollenmodell umgesetzt
-- [ ] Dokumentation vollständig genug für die Nutzung
+- ❌ Landingpage strukturell umgesetzt
+- ❌ Themen/Spalten funktionieren
+- ❌ Bearbeitungsworkflow vorhanden
+- ❌ Rollenmodell umgesetzt
+- ❌ Dokumentation vollständig genug für die Nutzung
 
 Offen:
 
-- [ ] Feinschliff
-- [ ] weitere Sonderfälle
-- [ ] gewünschte Erweiterungen aus dem Alltag
+- ❌ Feinschliff
+- ❌ weitere Sonderfälle
+- ❌ gewünschte Erweiterungen aus dem Alltag
 
 ## Fortschrittspflege
 
 Wenn wir weiterarbeiten, wird dieser Block jeweils aktualisiert:
 
-- Version: `v0.2.2`
+- Version: `v0.3.0`
 - Letzte Änderung: 2026-07-13
-- Nächster Fokus: Editor, Bearbeitungsworkflow und Rollenlogik
+- Nächster Fokus: Zuordnung von Inhalten zu Spalten und Card-Workflow
 
 ## Änderungslog
+
+### v0.3.0 — Inhaltsverwaltung gestartet
+
+- Kategorie- und Felddefinitions-Editor erweitert
+- Bearbeiten und Löschen für Kategorien und Felddefinitionen ergänzt
+- Repositories um CRUD-Methoden erweitert
+- Submission-Handler auf Update/Delete vorbereitet
+
+### v0.2.3 — Testseite abgesichert
+
+- Testseite gegen fehlende Testklassen abgesichert
+- Diagnostics-Seite stabilisiert
+
+### v0.2.2 — WordPress-Stubs ergänzt
+
+- WordPress-Stubs für IDE und lokale Entwicklung ergänzt
+
+### v0.2.1 — Testseite verbessert
+
+- Testseite um Einzelstart pro Test erweitert
 
 ### v0.2.0 — Cards und Anzeige
 
@@ -182,8 +221,6 @@ Wenn wir weiterarbeiten, wird dieser Block jeweils aktualisiert:
 - Card-Modell und Repository ergänzt
 - Renderer liest Cards und Kategorien
 - Tests für Card- und Landingpage-Ausgabe ergänzt
-- Testseite um Einzelstart pro Test erweitert
-- WordPress-Stubs für IDE und lokale Entwicklung ergänzt
 
 ## Offene Ideen für spätere Ergänzungen
 
@@ -193,3 +230,4 @@ Wenn wir weiterarbeiten, wird dieser Block jeweils aktualisiert:
 - Medienverwaltung pro Card
 - automatische Startseiten-Teaser aus Kategorien
 - Protokollierung von Änderungen
+
