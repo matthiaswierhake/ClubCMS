@@ -8,7 +8,9 @@ use ClubCMS\Admin\Dashboard;
 use ClubCMS\Admin\DiagnosticsPage;
 use ClubCMS\Admin\SettingsPage;
 use ClubCMS\Admin\SettingsSubmissionHandler;
+use ClubCMS\Frontend\LandingPageShortcode;
 use ClubCMS\Infrastructure\OptionStorage;
+use ClubCMS\Repository\CardRepository;
 use ClubCMS\Repository\CategoryRepository;
 use ClubCMS\Repository\FieldDefinitionRepository;
 
@@ -20,18 +22,23 @@ final class Plugin
 
     private DiagnosticsPage $diagnosticsPage;
 
+    private LandingPageShortcode $landingPageShortcode;
+
     public function register(): void
     {
         $storage = new OptionStorage();
         $categoryRepository = new CategoryRepository($storage);
+        $cardRepository = new CardRepository($storage);
         $fieldDefinitionRepository = new FieldDefinitionRepository($storage);
         $submissionHandler = new SettingsSubmissionHandler($categoryRepository, $fieldDefinitionRepository);
 
         $this->dashboard = new Dashboard($categoryRepository, $fieldDefinitionRepository);
         $this->settingsPage = new SettingsPage($categoryRepository, $fieldDefinitionRepository, $submissionHandler);
         $this->diagnosticsPage = new DiagnosticsPage();
+        $this->landingPageShortcode = new LandingPageShortcode($categoryRepository, $cardRepository);
 
         add_action('init', [$this, 'registerTextDomain']);
+        add_action('init', [$this->landingPageShortcode, 'register']);
         add_action('admin_menu', [$this, 'registerAdminMenu']);
     }
 

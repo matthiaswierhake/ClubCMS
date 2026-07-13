@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ClubCMS
  * Description: Structured content management for WordPress based on a generic card engine.
- * Version: 1.0.0
+ * Version: 0.2.0
  * Requires PHP: 8.2
  * Author: ClubCMS
  * Text Domain: clubcms
@@ -14,7 +14,7 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
-define('CLUBCMS_VERSION', '1.0.0');
+define('CLUBCMS_VERSION', '0.2.0');
 define('CLUBCMS_FILE', __FILE__);
 define('CLUBCMS_PATH', plugin_dir_path(__FILE__));
 define('CLUBCMS_URL', plugin_dir_url(__FILE__));
